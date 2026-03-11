@@ -15,7 +15,6 @@ func Migrate(db *gorm.DB) {
 
 	err := db.AutoMigrate(
 		&domain.User{},
-		&domain.Product{},
 	)
 
 	if err != nil {
@@ -95,7 +94,6 @@ func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
 
 	// Drop tables in reverse order of dependencies
-	db.Migrator().DropTable(&domain.Product{})
 	db.Migrator().DropTable(&domain.User{})
 
 	log.Println("All tables dropped")

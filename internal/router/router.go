@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler, productHandler *handler.ProductHandler) {
+func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler) {
 	// Global middlewares
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
@@ -45,14 +45,4 @@ func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler, productHandle
 	users.Put("/:id", userHandler.UpdateUser)
 	users.Delete("/:id", middleware.AdminMiddleware(), userHandler.DeleteUser)
 
-	// Product routes
-	products := api.Group("/products")
-	products.Get("/", productHandler.GetAllProducts)
-	products.Get("/:id", productHandler.GetProductByID)
-
-	// Protected product routes (admin only)
-	productsProtected := products.Group("", middleware.AuthMiddleware(), middleware.AdminMiddleware())
-	productsProtected.Post("/", productHandler.CreateProduct)
-	productsProtected.Put("/:id", productHandler.UpdateProduct)
-	productsProtected.Delete("/:id", productHandler.DeleteProduct)
 }

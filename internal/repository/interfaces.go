@@ -14,11 +14,3 @@ type UserRepository interface {
 	Delete(id uint) error
 }
 
-// ProductRepository interface defines product repository methods
-type ProductRepository interface {
-	Create(product *domain.Product) error
-	FindAll() ([]domain.Product, error)
-	FindByID(id uint) (*domain.Product, error)
-	Update(product *domain.Product) error
-	Delete(id uint) error
-}

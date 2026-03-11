@@ -52,15 +52,12 @@ func main() {
 
 	// Initialize repositories
 	userRepo := gormRepo.NewUserRepository(config.DB)
-	productRepo := gormRepo.NewProductRepository(config.DB)
 
 	// Initialize usecases
 	userUsecase := usecase.NewUserUsecase(userRepo)
-	productUsecase := usecase.NewProductUsecase(productRepo)
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userUsecase)
-	productHandler := handler.NewProductHandler(productUsecase)
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{
@@ -69,7 +66,7 @@ func main() {
 	})
 
 	// Setup routes
-	router.SetupRoutes(app, userHandler, productHandler)
+	router.SetupRoutes(app, userHandler)
 
 	// Graceful shutdown
 	c := make(chan os.Signal, 1)
