@@ -13,4 +13,3 @@ type UserRepository interface {
 	Update(user *domain.User) error
 	Delete(id uint) error
 }
-
