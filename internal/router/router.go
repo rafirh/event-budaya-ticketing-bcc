@@ -8,8 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler) {
-	// Global middlewares
+func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
@@ -18,7 +17,6 @@ func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler) {
 	app.Use(middleware.LoggerMiddleware())
 	app.Use(middleware.RecoveryMiddleware())
 
-	// Health check
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
@@ -26,23 +24,13 @@ func SetupRoutes(app *fiber.App, userHandler *handler.UserHandler) {
 		})
 	})
 
-	// API routes
 	api := app.Group("/api")
-
-	// Auth routes (public)
 	auth := api.Group("/auth")
-	auth.Post("/register", userHandler.Register)
-	auth.Post("/login", userHandler.Login)
 
-	// Protected auth routes
-	authProtected := auth.Group("", middleware.AuthMiddleware())
-	authProtected.Get("/profile", userHandler.GetProfile)
+	auth.Post("/register", authHandler.Register)
+	auth.Post("/login", authHandler.Login)
 
-	// User routes (protected)
-	users := api.Group("/users", middleware.AuthMiddleware())
-	users.Get("/", userHandler.GetAllUsers)
-	users.Get("/:id", userHandler.GetUserByID)
-	users.Put("/:id", userHandler.UpdateUser)
-	users.Delete("/:id", middleware.AdminMiddleware(), userHandler.DeleteUser)
-
+	protected := auth.Group("", middleware.AuthMiddleware())
+	protected.Get("/me", authHandler.Me)
+	protected.Post("/logout", authHandler.Logout)
 }

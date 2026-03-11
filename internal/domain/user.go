@@ -3,70 +3,74 @@ package domain
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Name      string         `gorm:"size:255;not null" json:"name"`
-	Email     string         `gorm:"size:255;uniqueIndex;not null" json:"email"`
-	Password  string         `gorm:"size:255;not null" json:"-"`
-	Role      string         `gorm:"size:50;default:'user'" json:"role"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID           uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name         string     `gorm:"size:150;not null" json:"name"`
+	Email        string     `gorm:"size:150;uniqueIndex;not null" json:"email"`
+	Password     string     `gorm:"not null" json:"-"`
+	Phone        *string    `gorm:"size:20" json:"phone"`
+	Role         string     `gorm:"size:20;not null" json:"role"`
+	ProfilePhoto *string    `json:"profile_photo"`
+	Gender       *string    `gorm:"size:10" json:"gender"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
 }
 
-// TableName specifies the table name for GORM
 func (User) TableName() string {
 	return "users"
 }
 
-// UserResponse is used for API responses (without password)
-type UserResponse struct {
-	ID        uint      `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	if u.ID == uuid.Nil {
+		u.ID = uuid.New()
+	}
+	return nil
 }
 
-// ToResponse converts User to UserResponse
+type UserResponse struct {
+	ID           uuid.UUID  `json:"id"`
+	Name         string     `json:"name"`
+	Email        string     `json:"email"`
+	Phone        *string    `json:"phone"`
+	Role         string     `json:"role"`
+	ProfilePhoto *string    `json:"profile_photo"`
+	Gender       *string    `json:"gender"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+}
+
 func (u *User) ToResponse() UserResponse {
 	return UserResponse{
-		ID:        u.ID,
-		Name:      u.Name,
-		Email:     u.Email,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:           u.ID,
+		Name:         u.Name,
+		Email:        u.Email,
+		Phone:        u.Phone,
+		Role:         u.Role,
+		ProfilePhoto: u.ProfilePhoto,
+		Gender:       u.Gender,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    u.UpdatedAt,
 	}
 }
 
-// CreateUserRequest is used for creating new user
-type CreateUserRequest struct {
-	Name     string `json:"name" validate:"required,min=2,max=255"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Role     string `json:"role" validate:"omitempty,oneof=admin user"`
+type RegisterRequest struct {
+	Name     string  `json:"name" validate:"required,min=2,max=150"`
+	Email    string  `json:"email" validate:"required,email"`
+	Password string  `json:"password" validate:"required,min=6"`
+	Phone    *string `json:"phone" validate:"omitempty,max=20"`
+	Role     string  `json:"role" validate:"omitempty,oneof=user promotor"`
+	Gender   *string `json:"gender" validate:"omitempty,oneof=male female other"`
 }
 
-// UpdateUserRequest is used for updating user
-type UpdateUserRequest struct {
-	Name     string `json:"name" validate:"omitempty,min=2,max=255"`
-	Email    string `json:"email" validate:"omitempty,email"`
-	Password string `json:"password" validate:"omitempty,min=6"`
-	Role     string `json:"role" validate:"omitempty,oneof=admin user"`
-}
-
-// LoginRequest is used for authentication
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
-// LoginResponse is returned after successful login
 type LoginResponse struct {
 	User  UserResponse `json:"user"`
 	Token string       `json:"token"`

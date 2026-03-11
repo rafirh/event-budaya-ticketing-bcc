@@ -7,16 +7,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims represents the JWT claims
 type Claims struct {
-	UserID uint   `json:"user_id"`
+	UserID string `json:"user_id"`
 	Email  string `json:"email"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-// GenerateToken generates a new JWT token
-func GenerateToken(userID uint, email, role, secret string, expiryHours int) (string, error) {
+func GenerateToken(userID, email, role, secret string, expiryHours int) (string, error) {
 	claims := Claims{
 		UserID: userID,
 		Email:  email,
@@ -32,7 +30,6 @@ func GenerateToken(userID uint, email, role, secret string, expiryHours int) (st
 	return token.SignedString([]byte(secret))
 }
 
-// ValidateToken validates a JWT token and returns the claims
 func ValidateToken(tokenString, secret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -50,14 +47,4 @@ func ValidateToken(tokenString, secret string) (*Claims, error) {
 	}
 
 	return nil, errors.New("invalid token")
-}
-
-// RefreshToken generates a new token from an existing valid token
-func RefreshToken(tokenString, secret string, expiryHours int) (string, error) {
-	claims, err := ValidateToken(tokenString, secret)
-	if err != nil {
-		return "", err
-	}
-
-	return GenerateToken(claims.UserID, claims.Email, claims.Role, secret, expiryHours)
 }

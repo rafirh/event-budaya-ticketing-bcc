@@ -1,0 +1,250 @@
+-- =====================================================
+-- DATABASE: EVENT BUDAYA MALANG
+-- PostgreSQL UUID VERSION
+-- =====================================================
+
+-- =====================================================
+-- EXTENSION
+-- =====================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+
+-- =====================================================
+-- USERS
+-- =====================================================
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    phone VARCHAR(20),
+
+    role VARCHAR(20) NOT NULL
+        CHECK (role IN ('user','promotor','admin')),
+
+    profile_photo TEXT,
+    gender VARCHAR(10)
+        CHECK (gender IN ('male','female','other')),
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- EVENT CATEGORIES
+-- =====================================================
+CREATE TABLE event_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL
+);
+
+
+-- =====================================================
+-- EVENTS
+-- =====================================================
+CREATE TABLE events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    promoter_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    category_id UUID
+        REFERENCES event_categories(id),
+
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) UNIQUE,
+
+    description TEXT,
+
+    venue VARCHAR(200),
+    address TEXT,
+    google_maps_url TEXT,
+
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+
+    is_paid BOOLEAN DEFAULT TRUE,
+
+    banner_url TEXT,
+
+    status VARCHAR(20) DEFAULT 'draft'
+        CHECK (status IN ('draft','published','finished')),
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- EVENT TICKETS
+-- =====================================================
+CREATE TABLE event_tickets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    event_id UUID NOT NULL
+        REFERENCES events(id) ON DELETE CASCADE,
+
+    name VARCHAR(100) NOT NULL,
+    price NUMERIC(12,2) DEFAULT 0,
+    quota INT NOT NULL,
+    sold INT DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- =====================================================
+-- ORDERS
+-- =====================================================
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    user_id UUID NOT NULL
+        REFERENCES users(id),
+
+    total_price NUMERIC(12,2) DEFAULT 0,
+
+    status VARCHAR(20) DEFAULT 'pending'
+        CHECK (status IN ('pending','paid','cancelled')),
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- ORDER ITEMS
+-- =====================================================
+CREATE TABLE order_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    order_id UUID NOT NULL
+        REFERENCES orders(id) ON DELETE CASCADE,
+
+    ticket_id UUID NOT NULL
+        REFERENCES event_tickets(id),
+
+    quantity INT NOT NULL,
+    price NUMERIC(12,2) NOT NULL
+);
+
+
+-- =====================================================
+-- PAYMENTS
+-- =====================================================
+CREATE TABLE payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    order_id UUID UNIQUE
+        REFERENCES orders(id) ON DELETE CASCADE,
+
+    payment_method VARCHAR(50),
+    payment_gateway VARCHAR(50),
+
+    amount NUMERIC(12,2),
+
+    status VARCHAR(20)
+        CHECK (status IN ('waiting','success','failed')),
+
+    paid_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- =====================================================
+-- TICKETS (E-TICKET)
+-- =====================================================
+CREATE TABLE tickets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    order_item_id UUID NOT NULL
+        REFERENCES order_items(id) ON DELETE CASCADE,
+
+    ticket_code VARCHAR(100) UNIQUE NOT NULL,
+    qr_code TEXT,
+
+    is_used BOOLEAN DEFAULT FALSE,
+    used_at TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- =====================================================
+-- EVENT COMMENTS (DISCUSSION)
+-- =====================================================
+CREATE TABLE event_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    event_id UUID NOT NULL
+        REFERENCES events(id) ON DELETE CASCADE,
+
+    user_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    parent_id UUID
+        REFERENCES event_comments(id) ON DELETE CASCADE,
+
+    comment TEXT NOT NULL,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- PROMOTER WALLETS
+-- =====================================================
+CREATE TABLE promoter_wallets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    promoter_id UUID UNIQUE NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    balance NUMERIC(14,2) DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- =====================================================
+-- WALLET TRANSACTIONS
+-- =====================================================
+CREATE TABLE wallet_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    wallet_id UUID NOT NULL
+        REFERENCES promoter_wallets(id) ON DELETE CASCADE,
+
+    type VARCHAR(20)
+        CHECK (type IN ('credit','debit')),
+
+    amount NUMERIC(12,2) NOT NULL,
+
+    reference_id UUID,
+    description TEXT,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+
+-- =====================================================
+-- INDEXES (PERFORMANCE)
+-- =====================================================
+CREATE INDEX idx_users_role ON users(role);
+
+CREATE INDEX idx_events_promoter ON events(promoter_id);
+CREATE INDEX idx_events_category ON events(category_id);
+CREATE INDEX idx_events_status ON events(status);
+
+CREATE INDEX idx_event_tickets_event ON event_tickets(event_id);
+
+CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+
+CREATE INDEX idx_comments_event ON event_comments(event_id);
+
+CREATE INDEX idx_wallet_promoter ON promoter_wallets(promoter_id);

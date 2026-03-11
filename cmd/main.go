@@ -18,20 +18,14 @@ import (
 )
 
 func main() {
-	// Parse command line flags
 	migrateFlag := flag.Bool("migrate", false, "Run database migrations")
 	seedFlag := flag.Bool("seed", false, "Run database seeders")
 	freshFlag := flag.Bool("fresh", false, "Drop all tables and re-run migrations")
 
 	flag.Parse()
-
-	// Load configuration
 	config.LoadConfig()
-
-	// Initialize database
 	config.InitDatabase()
 
-	// Handle migration commands
 	if *freshFlag {
 		migrations.Fresh(config.DB)
 		log.Println("Database refreshed successfully")
@@ -50,25 +44,17 @@ func main() {
 		return
 	}
 
-	// Initialize repositories
 	userRepo := gormRepo.NewUserRepository(config.DB)
+	authUsecase := usecase.NewAuthUsecase(userRepo)
+	authHandler := handler.NewAuthHandler(authUsecase)
 
-	// Initialize usecases
-	userUsecase := usecase.NewUserUsecase(userRepo)
-
-	// Initialize handlers
-	userHandler := handler.NewUserHandler(userUsecase)
-
-	// Initialize Fiber app
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
 		ErrorHandler: customErrorHandler,
 	})
 
-	// Setup routes
-	router.SetupRoutes(app, userHandler)
+	router.SetupRoutes(app, authHandler)
 
-	// Graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -78,7 +64,6 @@ func main() {
 		_ = app.Shutdown()
 	}()
 
-	// Start server
 	port := config.AppConfig.AppPort
 	log.Printf("Server starting on port %s", port)
 	log.Printf("Environment: %s", config.AppConfig.AppEnv)
