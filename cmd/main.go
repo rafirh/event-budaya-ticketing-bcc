@@ -45,7 +45,8 @@ func main() {
 	}
 
 	userRepo := gormRepo.NewUserRepository(config.DB)
-	authUsecase := usecase.NewAuthUsecase(userRepo)
+	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
+	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)
 
 	app := fiber.New(fiber.Config{
@@ -53,7 +54,7 @@ func main() {
 		ErrorHandler: customErrorHandler,
 	})
 
-	router.SetupRoutes(app, authHandler)
+	router.SetupRoutes(app, authHandler, tokenRepo)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

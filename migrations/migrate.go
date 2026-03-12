@@ -20,6 +20,7 @@ func Migrate(db *gorm.DB) {
 
 	err := db.AutoMigrate(
 		&domain.User{},
+		&domain.PersonalAccessToken{},
 	)
 
 	if err != nil {
@@ -68,7 +69,7 @@ func seedUsers(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&domain.User{})
+	db.Migrator().DropTable(&domain.PersonalAccessToken{}, &domain.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
 }

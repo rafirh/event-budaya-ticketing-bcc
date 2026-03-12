@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strings"
+
 	"event-budaya-ticketing-bcc/internal/domain"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/pkg/response"
@@ -65,5 +67,15 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid authorization header")
+	}
+
+	if err := h.authUsecase.Logout(parts[1]); err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
+
 	return response.Success(c, fiber.StatusOK, "Logged out successfully", nil)
 }

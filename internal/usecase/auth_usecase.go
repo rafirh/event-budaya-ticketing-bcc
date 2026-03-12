@@ -1,12 +1,12 @@
 package usecase
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 
-	"event-budaya-ticketing-bcc/config"
 	"event-budaya-ticketing-bcc/internal/domain"
 	"event-budaya-ticketing-bcc/internal/repository"
-	"event-budaya-ticketing-bcc/pkg/jwt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,14 +15,25 @@ type AuthUsecase interface {
 	Register(req *domain.RegisterRequest) (*domain.UserResponse, error)
 	Login(req *domain.LoginRequest) (*domain.LoginResponse, error)
 	GetMe(id string) (*domain.UserResponse, error)
+	Logout(token string) error
 }
 
 type authUsecase struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
+	tokenRepo repository.PersonalAccessTokenRepository
 }
 
-func NewAuthUsecase(userRepo repository.UserRepository) AuthUsecase {
-	return &authUsecase{userRepo: userRepo}
+func NewAuthUsecase(userRepo repository.UserRepository, tokenRepo repository.PersonalAccessTokenRepository) AuthUsecase {
+	return &authUsecase{userRepo: userRepo, tokenRepo: tokenRepo}
+}
+
+func generateToken() (string, error) {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 func (u *authUsecase) Register(req *domain.RegisterRequest) (*domain.UserResponse, error) {
@@ -68,14 +79,23 @@ func (u *authUsecase) Login(req *domain.LoginRequest) (*domain.LoginResponse, er
 		return nil, errors.New("invalid email or password")
 	}
 
-	token, err := jwt.GenerateToken(user.ID.String(), user.Email, user.Role, config.AppConfig.JWTSecret, config.AppConfig.JWTExpiryHours)
+	rawToken, err := generateToken()
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
 
+	pat := &domain.PersonalAccessToken{
+		UserID: user.ID,
+		Token:  rawToken,
+		Name:   "default",
+	}
+	if err := u.tokenRepo.Create(pat); err != nil {
+		return nil, errors.New("failed to save token")
+	}
+
 	return &domain.LoginResponse{
 		User:  user.ToResponse(),
-		Token: token,
+		Token: rawToken,
 	}, nil
 }
 
@@ -87,4 +107,8 @@ func (u *authUsecase) GetMe(id string) (*domain.UserResponse, error) {
 
 	resp := user.ToResponse()
 	return &resp, nil
+}
+
+func (u *authUsecase) Logout(token string) error {
+	return u.tokenRepo.DeleteByToken(token)
 }

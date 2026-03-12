@@ -3,12 +3,13 @@ package router
 import (
 	"event-budaya-ticketing-bcc/internal/handler"
 	"event-budaya-ticketing-bcc/internal/middleware"
+	"event-budaya-ticketing-bcc/internal/repository"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler) {
+func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, tokenRepo repository.PersonalAccessTokenRepository) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
@@ -30,7 +31,7 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler) {
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
 
-	protected := auth.Group("", middleware.AuthMiddleware())
+	protected := auth.Group("", middleware.AuthMiddleware(tokenRepo))
 	protected.Get("/me", authHandler.Me)
 	protected.Post("/logout", authHandler.Logout)
 }
