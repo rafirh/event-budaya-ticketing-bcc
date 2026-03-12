@@ -20,4 +20,5 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /root/event-budaya-ticketing-bcc
-            make redeploy
+            git pull origin main
+            make deps build restart
