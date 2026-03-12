@@ -18,6 +18,14 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, tokenRepo rep
 	app.Use(middleware.LoggerMiddleware())
 	app.Use(middleware.RecoveryMiddleware())
 
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"message":  "API running successfully",
+			"status":   true,
+			"api_docs": "https://2ikhh28mj3.apidog.io/",
+		})
+	})
+
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
