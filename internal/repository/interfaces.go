@@ -22,3 +22,7 @@ type PersonalAccessTokenRepository interface {
 	DeleteByUserID(userID uuid.UUID) error
 	UpdateLastUsed(id uint, t time.Time) error
 }
+
+type EventCategoryRepository interface {
+	FindAll() ([]model.EventCategory, error)
+}

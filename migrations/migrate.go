@@ -21,6 +21,7 @@ func Migrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.User{},
 		&model.PersonalAccessToken{},
+		&model.EventCategory{},
 	)
 
 	if err != nil {
@@ -33,6 +34,7 @@ func Migrate(db *gorm.DB) {
 func Seed(db *gorm.DB) {
 	log.Println("Running seeders...")
 	seedUsers(db)
+	seedEventCategories(db)
 	log.Println("Seeders completed successfully")
 }
 
@@ -69,7 +71,32 @@ func seedUsers(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&model.PersonalAccessToken{}, &model.User{})
+	db.Migrator().DropTable(&model.PersonalAccessToken{}, &model.EventCategory{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
+}
+
+func seedEventCategories(db *gorm.DB) {
+	categories := []string{
+		"Seminar",
+		"Workshop",
+		"Konferensi",
+		"Talkshow",
+		"Festival",
+		"Kompetisi",
+		"Exhibition",
+		"Concert",
+	}
+
+	for _, name := range categories {
+		var count int64
+		db.Model(&model.EventCategory{}).Where("name = ?", name).Count(&count)
+		if count > 0 {
+			continue
+		}
+
+		category := model.EventCategory{Name: name}
+		db.Create(&category)
+		log.Printf("Seeded category: %s", name)
+	}
 }
