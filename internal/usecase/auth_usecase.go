@@ -1,13 +1,16 @@
 package usecase
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"mime/multipart"
 
 	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
+	"event-budaya-ticketing-bcc/pkg/storage"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -16,16 +19,18 @@ type AuthUsecase interface {
 	Register(req *dto.RegisterRequest) (*dto.UserResponse, error)
 	Login(req *dto.LoginRequest) (*dto.LoginResponse, error)
 	GetMe(id string) (*dto.UserResponse, error)
+	UpdateProfile(userID string, req *dto.UpdateProfileRequest, photo *multipart.FileHeader) (*dto.UserResponse, error)
 	Logout(token string) error
 }
 
 type authUsecase struct {
 	userRepo  repository.UserRepository
 	tokenRepo repository.PersonalAccessTokenRepository
+	uploader  storage.Uploader
 }
 
-func NewAuthUsecase(userRepo repository.UserRepository, tokenRepo repository.PersonalAccessTokenRepository) AuthUsecase {
-	return &authUsecase{userRepo: userRepo, tokenRepo: tokenRepo}
+func NewAuthUsecase(userRepo repository.UserRepository, tokenRepo repository.PersonalAccessTokenRepository, uploader storage.Uploader) AuthUsecase {
+	return &authUsecase{userRepo: userRepo, tokenRepo: tokenRepo, uploader: uploader}
 }
 
 func generateToken() (string, error) {
@@ -104,6 +109,42 @@ func (u *authUsecase) GetMe(id string) (*dto.UserResponse, error) {
 	user, err := u.userRepo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("user not found")
+	}
+
+	resp := dto.ToUserResponse(user)
+	return &resp, nil
+}
+
+func (u *authUsecase) UpdateProfile(userID string, req *dto.UpdateProfileRequest, photo *multipart.FileHeader) (*dto.UserResponse, error) {
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	if req.Name != nil {
+		user.Name = *req.Name
+	}
+	if req.Phone != nil {
+		user.Phone = req.Phone
+	}
+	if req.Gender != nil {
+		user.Gender = req.Gender
+	}
+
+	if photo != nil {
+		if u.uploader == nil {
+			return nil, errors.New("storage uploader is not configured")
+		}
+
+		url, uploadErr := u.uploader.UploadImage(context.Background(), photo, "profiles")
+		if uploadErr != nil {
+			return nil, errors.New("failed to upload profile photo: " + uploadErr.Error())
+		}
+		user.ProfilePhoto = &url
+	}
+
+	if err := u.userRepo.Update(user); err != nil {
+		return nil, errors.New("failed to update profile")
 	}
 
 	resp := dto.ToUserResponse(user)

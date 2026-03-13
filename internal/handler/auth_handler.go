@@ -66,6 +66,38 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	return response.Success(c, fiber.StatusOK, "User profile retrieved", user)
 }
 
+func (h *AuthHandler) UpdateProfile(c *fiber.Ctx) error {
+	if c.FormValue("email") != "" {
+		return response.Error(c, fiber.StatusBadRequest, "email cannot be updated")
+	}
+
+	var req dto.UpdateProfileRequest
+
+	if name := c.FormValue("name"); name != "" {
+		req.Name = &name
+	}
+	if phone := c.FormValue("phone"); phone != "" {
+		req.Phone = &phone
+	}
+	if gender := c.FormValue("gender"); gender != "" {
+		req.Gender = &gender
+	}
+
+	if errors := validator.ValidateStruct(req); errors != nil {
+		return response.ValidationError(c, errors)
+	}
+
+	fileHeader, _ := c.FormFile("profile_photo")
+	userID := c.Locals("userID").(string)
+
+	user, err := h.authUsecase.UpdateProfile(userID, &req, fileHeader)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Profile updated successfully", user)
+}
+
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	parts := strings.Split(authHeader, " ")

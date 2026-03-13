@@ -19,6 +19,11 @@ type Config struct {
 	DBName         string
 	JWTSecret      string
 	JWTExpiryHours int
+	S3Key          string
+	S3Secret       string
+	S3Bucket       string
+	S3Region       string
+	S3PublicBase   string
 }
 
 var AppConfig *Config
@@ -42,6 +47,11 @@ func LoadConfig() {
 		DBName:         getEnv("DB_NAME", "event_budaya_db"),
 		JWTSecret:      getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
 		JWTExpiryHours: jwtExpiry,
+		S3Key:          getEnv("S3_KEY", ""),
+		S3Secret:       getEnv("S3_SECRET", ""),
+		S3Bucket:       getEnv("S3_BUCKET", ""),
+		S3Region:       getEnv("S3_REGION", ""),
+		S3PublicBase:   getEnv("S3_PUBLIC_BASE_URL", ""),
 	}
 }
 

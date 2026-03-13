@@ -36,3 +36,7 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *userRepository) Update(user *model.User) error {
+	return r.db.Save(user).Error
+}

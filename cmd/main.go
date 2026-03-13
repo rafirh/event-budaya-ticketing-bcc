@@ -13,6 +13,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/router"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/migrations"
+	"event-budaya-ticketing-bcc/pkg/storage"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -46,7 +47,24 @@ func main() {
 
 	userRepo := gormRepo.NewUserRepository(config.DB)
 	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
-	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo)
+
+	var uploader storage.Uploader
+	if config.AppConfig.S3Bucket != "" && config.AppConfig.S3Region != "" {
+		s3Uploader, err := storage.NewS3Uploader(storage.S3Config{
+			Region:        config.AppConfig.S3Region,
+			Bucket:        config.AppConfig.S3Bucket,
+			AccessKey:     config.AppConfig.S3Key,
+			SecretKey:     config.AppConfig.S3Secret,
+			PublicBaseURL: config.AppConfig.S3PublicBase,
+		})
+		if err != nil {
+			log.Printf("Warning: failed to initialize S3 uploader: %v", err)
+		} else {
+			uploader = s3Uploader
+		}
+	}
+
+	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, uploader)
 	authHandler := handler.NewAuthHandler(authUsecase)
 
 	app := fiber.New(fiber.Config{

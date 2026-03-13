@@ -11,7 +11,6 @@ type UserResponse struct {
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`
 	Phone        *string   `json:"phone"`
-	Role         string    `json:"role"`
 	ProfilePhoto *string   `json:"profile_photo"`
 	Gender       *string   `json:"gender"`
 }
@@ -27,7 +26,6 @@ func ToUserResponse(u *model.User) UserResponse {
 		Name:         u.Name,
 		Email:        u.Email,
 		Phone:        u.Phone,
-		Role:         u.Role,
 		ProfilePhoto: u.ProfilePhoto,
 		Gender:       u.Gender,
 	}
