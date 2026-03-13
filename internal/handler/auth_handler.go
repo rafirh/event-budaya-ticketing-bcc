@@ -3,7 +3,7 @@ package handler
 import (
 	"strings"
 
-	"event-budaya-ticketing-bcc/internal/domain"
+	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/pkg/response"
 	"event-budaya-ticketing-bcc/pkg/validator"
@@ -20,7 +20,7 @@ func NewAuthHandler(authUsecase usecase.AuthUsecase) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var req domain.RegisterRequest
+	var req dto.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
 	}
@@ -38,7 +38,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	var req domain.LoginRequest
+	var req dto.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
 	}

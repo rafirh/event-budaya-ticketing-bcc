@@ -3,7 +3,7 @@ package migrations
 import (
 	"log"
 
-	"event-budaya-ticketing-bcc/internal/domain"
+	"event-budaya-ticketing-bcc/internal/model"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -19,8 +19,8 @@ func Migrate(db *gorm.DB) {
 	}
 
 	err := db.AutoMigrate(
-		&domain.User{},
-		&domain.PersonalAccessToken{},
+		&model.User{},
+		&model.PersonalAccessToken{},
 	)
 
 	if err != nil {
@@ -50,13 +50,13 @@ func seedUsers(db *gorm.DB) {
 
 	for _, u := range users {
 		var count int64
-		db.Model(&domain.User{}).Where("email = ?", u.Email).Count(&count)
+		db.Model(&model.User{}).Where("email = ?", u.Email).Count(&count)
 		if count > 0 {
 			continue
 		}
 
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-		user := domain.User{
+		user := model.User{
 			Name:     u.Name,
 			Email:    u.Email,
 			Password: string(hashedPassword),
@@ -69,7 +69,7 @@ func seedUsers(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&domain.PersonalAccessToken{}, &domain.User{})
+	db.Migrator().DropTable(&model.PersonalAccessToken{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
 }

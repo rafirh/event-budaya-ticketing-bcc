@@ -3,20 +3,20 @@ package repository
 import (
 	"time"
 
-	"event-budaya-ticketing-bcc/internal/domain"
+	"event-budaya-ticketing-bcc/internal/model"
 
 	"github.com/google/uuid"
 )
 
 type UserRepository interface {
-	Create(user *domain.User) error
-	FindByID(id string) (*domain.User, error)
-	FindByEmail(email string) (*domain.User, error)
+	Create(user *model.User) error
+	FindByID(id string) (*model.User, error)
+	FindByEmail(email string) (*model.User, error)
 }
 
 type PersonalAccessTokenRepository interface {
-	Create(token *domain.PersonalAccessToken) error
-	FindByToken(token string) (*domain.PersonalAccessToken, error)
+	Create(token *model.PersonalAccessToken) error
+	FindByToken(token string) (*model.PersonalAccessToken, error)
 	DeleteByToken(token string) error
 	DeleteByUserID(userID uuid.UUID) error
 	UpdateLastUsed(id uint, t time.Time) error

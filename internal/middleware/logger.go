@@ -7,15 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// LoggerMiddleware logs incoming requests
 func LoggerMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 
-		// Process request
 		err := c.Next()
 
-		// Log request details
 		log.Printf(
 			"[%s] %s %s - %d - %v",
 			c.Method(),
@@ -29,7 +26,6 @@ func LoggerMiddleware() fiber.Handler {
 	}
 }
 
-// RecoveryMiddleware recovers from panics
 func RecoveryMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		defer func() {

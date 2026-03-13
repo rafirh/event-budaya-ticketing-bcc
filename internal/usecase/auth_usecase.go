@@ -5,16 +5,17 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"event-budaya-ticketing-bcc/internal/domain"
+	"event-budaya-ticketing-bcc/internal/dto"
+	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthUsecase interface {
-	Register(req *domain.RegisterRequest) (*domain.UserResponse, error)
-	Login(req *domain.LoginRequest) (*domain.LoginResponse, error)
-	GetMe(id string) (*domain.UserResponse, error)
+	Register(req *dto.RegisterRequest) (*dto.UserResponse, error)
+	Login(req *dto.LoginRequest) (*dto.LoginResponse, error)
+	GetMe(id string) (*dto.UserResponse, error)
 	Logout(token string) error
 }
 
@@ -36,7 +37,7 @@ func generateToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func (u *authUsecase) Register(req *domain.RegisterRequest) (*domain.UserResponse, error) {
+func (u *authUsecase) Register(req *dto.RegisterRequest) (*dto.UserResponse, error) {
 	existing, _ := u.userRepo.FindByEmail(req.Email)
 	if existing != nil {
 		return nil, errors.New("email already registered")
@@ -52,7 +53,7 @@ func (u *authUsecase) Register(req *domain.RegisterRequest) (*domain.UserRespons
 		role = "user"
 	}
 
-	user := &domain.User{
+	user := &model.User{
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashedPassword),
@@ -65,11 +66,11 @@ func (u *authUsecase) Register(req *domain.RegisterRequest) (*domain.UserRespons
 		return nil, errors.New("failed to create user")
 	}
 
-	resp := user.ToResponse()
+	resp := dto.ToUserResponse(user)
 	return &resp, nil
 }
 
-func (u *authUsecase) Login(req *domain.LoginRequest) (*domain.LoginResponse, error) {
+func (u *authUsecase) Login(req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	user, err := u.userRepo.FindByEmail(req.Email)
 	if err != nil {
 		return nil, errors.New("invalid email or password")
@@ -84,7 +85,7 @@ func (u *authUsecase) Login(req *domain.LoginRequest) (*domain.LoginResponse, er
 		return nil, errors.New("failed to generate token")
 	}
 
-	pat := &domain.PersonalAccessToken{
+	pat := &model.PersonalAccessToken{
 		UserID: user.ID,
 		Token:  rawToken,
 		Name:   "default",
@@ -93,19 +94,19 @@ func (u *authUsecase) Login(req *domain.LoginRequest) (*domain.LoginResponse, er
 		return nil, errors.New("failed to save token")
 	}
 
-	return &domain.LoginResponse{
-		User:  user.ToResponse(),
+	return &dto.LoginResponse{
+		User:  dto.ToUserResponse(user),
 		Token: rawToken,
 	}, nil
 }
 
-func (u *authUsecase) GetMe(id string) (*domain.UserResponse, error) {
+func (u *authUsecase) GetMe(id string) (*dto.UserResponse, error) {
 	user, err := u.userRepo.FindByID(id)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
 
-	resp := user.ToResponse()
+	resp := dto.ToUserResponse(user)
 	return &resp, nil
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// AuthMiddleware validates token against personal_access_tokens table
 func AuthMiddleware(tokenRepo repository.PersonalAccessTokenRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
@@ -35,7 +34,6 @@ func AuthMiddleware(tokenRepo repository.PersonalAccessTokenRepository) fiber.Ha
 			return response.Error(c, fiber.StatusUnauthorized, "Invalid or expired token")
 		}
 
-		// Update last_used_at
 		now := time.Now()
 		pat.LastUsedAt = &now
 		_ = tokenRepo.UpdateLastUsed(pat.ID, now)
@@ -48,7 +46,6 @@ func AuthMiddleware(tokenRepo repository.PersonalAccessTokenRepository) fiber.Ha
 	}
 }
 
-// AdminMiddleware checks if user has admin role
 func AdminMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		role := c.Locals("userRole")

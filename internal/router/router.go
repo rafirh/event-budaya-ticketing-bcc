@@ -10,6 +10,14 @@ import (
 )
 
 func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, tokenRepo repository.PersonalAccessTokenRepository) {
+	registerMiddlewares(app)
+	registerBaseRoutes(app)
+
+	api := app.Group("/api")
+	authRoutes(api, authHandler, tokenRepo)
+}
+
+func registerMiddlewares(app *fiber.App) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
@@ -17,7 +25,9 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, tokenRepo rep
 	}))
 	app.Use(middleware.LoggerMiddleware())
 	app.Use(middleware.RecoveryMiddleware())
+}
 
+func registerBaseRoutes(app *fiber.App) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message":  "API running successfully",
@@ -32,14 +42,4 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, tokenRepo rep
 			"message": "Server is running",
 		})
 	})
-
-	api := app.Group("/api")
-	auth := api.Group("/auth")
-
-	auth.Post("/register", authHandler.Register)
-	auth.Post("/login", authHandler.Login)
-
-	protected := auth.Group("", middleware.AuthMiddleware(tokenRepo))
-	protected.Get("/me", authHandler.Me)
-	protected.Post("/logout", authHandler.Logout)
 }
