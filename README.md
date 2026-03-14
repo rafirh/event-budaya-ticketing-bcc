@@ -1,6 +1,6 @@
 # Event Budaya Ticketing - BCC
 
-A ticketing platform for cultural events managed by Balai Budaya Citra (BCC). This application provides APIs for event management, categories, authentication, and ticketing system.
+A ticketing platform for cultural events. This application provides APIs for event management, categories, authentication, and ticketing system.
 
 ## 📋 Prerequisites
 
