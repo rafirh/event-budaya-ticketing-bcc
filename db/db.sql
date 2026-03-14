@@ -73,8 +73,7 @@ CREATE TABLE events (
         CHECK (status IN ('draft','published','finished')),
 
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP
+    updated_at TIMESTAMP
 );
 
 

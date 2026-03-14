@@ -26,3 +26,7 @@ type PersonalAccessTokenRepository interface {
 type EventCategoryRepository interface {
 	FindAll() ([]model.EventCategory, error)
 }
+
+type EventRepository interface {
+	FindAll() ([]model.Event, error)
+}

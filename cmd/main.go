@@ -48,6 +48,7 @@ func main() {
 	userRepo := gormRepo.NewUserRepository(config.DB)
 	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
 	categoryRepo := gormRepo.NewEventCategoryRepository(config.DB)
+	eventRepo := gormRepo.NewEventRepository(config.DB)
 
 	var uploader storage.Uploader
 	if config.AppConfig.S3Bucket != "" && config.AppConfig.S3Region != "" {
@@ -67,15 +68,17 @@ func main() {
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
+	eventUsecase := usecase.NewEventUsecase(eventRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
+	eventHandler := handler.NewEventHandler(eventUsecase)
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
 		ErrorHandler: customErrorHandler,
 	})
 
-	router.SetupRoutes(app, authHandler, categoryHandler, tokenRepo)
+	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, tokenRepo)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

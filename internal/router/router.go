@@ -9,13 +9,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, tokenRepo repository.PersonalAccessTokenRepository) {
+func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, eventHandler *handler.EventHandler, tokenRepo repository.PersonalAccessTokenRepository) {
 	registerMiddlewares(app)
 	registerBaseRoutes(app)
 
 	api := app.Group("/api")
 	authRoutes(api, authHandler, tokenRepo)
 	categoryRoutes(api, categoryHandler)
+	eventRoutes(api, eventHandler)
 }
 
 func registerMiddlewares(app *fiber.App) {
