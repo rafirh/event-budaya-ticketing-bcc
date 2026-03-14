@@ -10,6 +10,9 @@ import (
 )
 
 func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, eventHandler *handler.EventHandler, tokenRepo repository.PersonalAccessTokenRepository) {
+	app.Static("/uploads", "./public/uploads")
+	app.Static("/", "./public")
+
 	registerMiddlewares(app)
 	registerBaseRoutes(app)
 

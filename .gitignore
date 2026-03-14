@@ -45,3 +45,10 @@ Thumbs.db
 
 # Air (hot reload)
 /tmp/
+
+# Uploaded files (but keep the folder structure)
+/public/uploads/*
+!/public/uploads/.gitkeep
+!/public/uploads/events/.gitkeep
+!/public/uploads/users/.gitkeep
+!/public/uploads/categories/.gitkeep
