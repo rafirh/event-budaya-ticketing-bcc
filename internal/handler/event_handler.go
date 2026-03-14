@@ -23,3 +23,14 @@ func (h *EventHandler) GetAll(c *fiber.Ctx) error {
 
 	return response.Success(c, fiber.StatusOK, "Events retrieved successfully", events)
 }
+
+func (h *EventHandler) GetBySlug(c *fiber.Ctx) error {
+	slug := c.Params("slug")
+
+	event, err := h.eventUsecase.GetBySlug(slug)
+	if err != nil {
+		return response.Error(c, fiber.StatusNotFound, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Event retrieved successfully", event)
+}

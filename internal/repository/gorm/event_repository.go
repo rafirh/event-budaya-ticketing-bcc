@@ -27,3 +27,16 @@ func (r *eventRepository) FindAll() ([]model.Event, error) {
 	}
 	return events, nil
 }
+
+func (r *eventRepository) FindBySlug(slug string) (*model.Event, error) {
+	var event model.Event
+	err := r.db.
+		Preload("Promoter").
+		Preload("Category").
+		Where("slug = ?", slug).
+		First(&event).Error
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}

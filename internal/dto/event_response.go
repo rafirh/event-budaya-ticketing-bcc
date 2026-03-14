@@ -32,9 +32,6 @@ type EventResponse struct {
 	EndDate       *time.Time            `json:"end_date"`
 	IsPaid        bool                  `json:"is_paid"`
 	BannerURL     *string               `json:"banner_url"`
-	Status        string                `json:"status"`
-	CreatedAt     time.Time             `json:"created_at"`
-	UpdatedAt     *time.Time            `json:"updated_at"`
 }
 
 func ToEventResponse(event model.Event) EventResponse {
@@ -63,8 +60,5 @@ func ToEventResponse(event model.Event) EventResponse {
 		EndDate:       event.EndDate,
 		IsPaid:        event.IsPaid,
 		BannerURL:     event.BannerURL,
-		Status:        event.Status,
-		CreatedAt:     event.CreatedAt,
-		UpdatedAt:     event.UpdatedAt,
 	}
 }

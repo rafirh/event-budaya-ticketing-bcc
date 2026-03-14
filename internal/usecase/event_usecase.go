@@ -9,6 +9,7 @@ import (
 
 type EventUsecase interface {
 	GetAll() ([]dto.EventResponse, error)
+	GetBySlug(slug string) (*dto.EventResponse, error)
 }
 
 type eventUsecase struct {
@@ -31,4 +32,18 @@ func (u *eventUsecase) GetAll() ([]dto.EventResponse, error) {
 	}
 
 	return responses, nil
+}
+
+func (u *eventUsecase) GetBySlug(slug string) (*dto.EventResponse, error) {
+	if slug == "" {
+		return nil, errors.New("slug is required")
+	}
+
+	event, err := u.eventRepo.FindBySlug(slug)
+	if err != nil {
+		return nil, errors.New("event not found")
+	}
+
+	response := dto.ToEventResponse(*event)
+	return &response, nil
 }

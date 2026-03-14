@@ -9,4 +9,5 @@ import (
 func eventRoutes(api fiber.Router, eventHandler *handler.EventHandler) {
 	events := api.Group("/events")
 	events.Get("/", eventHandler.GetAll)
+	events.Get("/:slug", eventHandler.GetBySlug)
 }
