@@ -5,7 +5,7 @@ import "github.com/google/uuid"
 type EventCategory struct {
 	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	Name string    `gorm:"size:100;not null" json:"name"`
-	Logo *string   `json:"logo"`
+	Icon *string   `json:"icon"`
 }
 
 func (EventCategory) TableName() string {
