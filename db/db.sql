@@ -65,8 +65,12 @@ CREATE TABLE events (
 
     start_date TIMESTAMP,
     end_date TIMESTAMP,
+    registration_deadline TIMESTAMP,
 
     is_paid BOOLEAN DEFAULT TRUE,
+    price NUMERIC(12,2) DEFAULT 0,
+    quota INT NOT NULL DEFAULT 0 CHECK (quota >= 0),
+    sold INT DEFAULT 0 CHECK (sold >= 0),
 
     banner_url TEXT,
 
@@ -75,24 +79,6 @@ CREATE TABLE events (
 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
-);
-
-
--- =====================================================
--- EVENT TICKETS
--- =====================================================
-CREATE TABLE event_tickets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    event_id UUID NOT NULL
-        REFERENCES events(id) ON DELETE CASCADE,
-
-    name VARCHAR(100) NOT NULL,
-    price NUMERIC(12,2) DEFAULT 0,
-    quota INT NOT NULL,
-    sold INT DEFAULT 0,
-
-    created_at TIMESTAMP DEFAULT NOW()
 );
 
 
@@ -124,8 +110,8 @@ CREATE TABLE order_items (
     order_id UUID NOT NULL
         REFERENCES orders(id) ON DELETE CASCADE,
 
-    ticket_id UUID NOT NULL
-        REFERENCES event_tickets(id),
+    event_id UUID NOT NULL
+        REFERENCES events(id),
 
     quantity INT NOT NULL CHECK (quantity > 0),
     price NUMERIC(12,2) NOT NULL
@@ -247,10 +233,9 @@ CREATE INDEX idx_events_promoter ON events(promoter_id);
 CREATE INDEX idx_events_category ON events(category_id);
 CREATE INDEX idx_events_status ON events(status);
 
-CREATE INDEX idx_event_tickets_event ON event_tickets(event_id);
-
 CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_order_items_event ON order_items(event_id);
 
 CREATE INDEX idx_tickets_order_item ON tickets(order_item_id);
 CREATE INDEX idx_tickets_identity_number ON tickets(identity_number);
