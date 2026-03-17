@@ -1,6 +1,8 @@
 package gorm
 
 import (
+	"fmt"
+
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 
@@ -15,11 +17,13 @@ func NewEventCategoryRepository(db *gorm.DB) repository.EventCategoryRepository 
 	return &eventCategoryRepository{db: db}
 }
 
-func (r *eventCategoryRepository) FindAll(limit, offset int) ([]model.EventCategory, int64, error) {
+func (r *eventCategoryRepository) FindAll(limit, offset int, sortBy, sortOrder string) ([]model.EventCategory, int64, error) {
 	var total int64
 	if err := r.db.Table("event_categories").Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+
+	orderBy := buildCategoryOrderBy(sortBy, sortOrder)
 
 	var categories []model.EventCategory
 	err := r.db.
@@ -27,7 +31,7 @@ func (r *eventCategoryRepository) FindAll(limit, offset int) ([]model.EventCateg
 		Select("event_categories.id, event_categories.name, event_categories.icon, COUNT(events.id) AS event_count").
 		Joins("LEFT JOIN events ON events.category_id = event_categories.id").
 		Group("event_categories.id, event_categories.name, event_categories.icon").
-		Order("event_categories.name ASC").
+		Order(orderBy).
 		Limit(limit).
 		Offset(offset).
 		Scan(&categories).Error
@@ -35,4 +39,22 @@ func (r *eventCategoryRepository) FindAll(limit, offset int) ([]model.EventCateg
 		return nil, 0, err
 	}
 	return categories, total, nil
+}
+
+func buildCategoryOrderBy(sortBy, sortOrder string) string {
+	column := map[string]string{
+		"name":        "event_categories.name",
+		"event_count": "event_count",
+	}[sortBy]
+
+	if column == "" {
+		column = "event_categories.name"
+	}
+
+	order := "ASC"
+	if sortOrder == "desc" {
+		order = "DESC"
+	}
+
+	return fmt.Sprintf("%s %s", column, order)
 }

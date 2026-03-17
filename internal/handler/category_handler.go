@@ -37,7 +37,21 @@ func (h *CategoryHandler) GetAll(c *fiber.Ctx) error {
 		limit = parsedLimit
 	}
 
-	categories, total, err := h.categoryUsecase.GetAll(page, limit)
+	sortBy := c.Query("sort_by", "name")
+	allowedSortFields := map[string]bool{
+		"name":        true,
+		"event_count": true,
+	}
+	if !allowedSortFields[sortBy] {
+		return response.Error(c, fiber.StatusBadRequest, "invalid sort_by parameter")
+	}
+
+	sortOrder := c.Query("sort_order", "asc")
+	if sortOrder != "asc" && sortOrder != "desc" {
+		return response.Error(c, fiber.StatusBadRequest, "invalid sort_order parameter")
+	}
+
+	categories, total, err := h.categoryUsecase.GetAll(page, limit, sortBy, sortOrder)
 	if err != nil {
 		return response.Error(c, fiber.StatusInternalServerError, err.Error())
 	}

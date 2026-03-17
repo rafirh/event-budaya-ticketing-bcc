@@ -1,6 +1,8 @@
 package gorm
 
 import (
+	"fmt"
+
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 
@@ -15,8 +17,9 @@ func NewEventRepository(db *gorm.DB) repository.EventRepository {
 	return &eventRepository{db: db}
 }
 
-func (r *eventRepository) FindAll(search, categoryID string, limit, offset int) ([]model.Event, int64, error) {
+func (r *eventRepository) FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error) {
 	baseQuery := r.db.Model(&model.Event{})
+	orderBy := buildEventOrderBy(sortBy, sortOrder)
 
 	if search != "" {
 		searchKeyword := "%" + search + "%"
@@ -47,7 +50,7 @@ func (r *eventRepository) FindAll(search, categoryID string, limit, offset int) 
 			}
 			return query
 		}).
-		Order("start_date ASC NULLS LAST").
+		Order(orderBy).
 		Limit(limit).
 		Offset(offset).
 		Find(&events).Error
@@ -68,4 +71,32 @@ func (r *eventRepository) FindBySlug(slug string) (*model.Event, error) {
 		return nil, err
 	}
 	return &event, nil
+}
+
+func buildEventOrderBy(sortBy, sortOrder string) string {
+	column := map[string]string{
+		"title":                 "title",
+		"start_date":            "start_date",
+		"end_date":              "end_date",
+		"registration_deadline": "registration_deadline",
+		"price":                 "price",
+		"quota":                 "quota",
+		"sold":                  "sold",
+		"created_at":            "created_at",
+	}[sortBy]
+
+	if column == "" {
+		column = "created_at"
+	}
+
+	order := "DESC"
+	if sortOrder == "asc" {
+		order = "ASC"
+	}
+
+	if column == "start_date" || column == "end_date" || column == "registration_deadline" {
+		return fmt.Sprintf("%s %s NULLS LAST", column, order)
+	}
+
+	return fmt.Sprintf("%s %s", column, order)
 }

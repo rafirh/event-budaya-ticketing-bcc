@@ -24,10 +24,10 @@ type PersonalAccessTokenRepository interface {
 }
 
 type EventCategoryRepository interface {
-	FindAll(limit, offset int) ([]model.EventCategory, int64, error)
+	FindAll(limit, offset int, sortBy, sortOrder string) ([]model.EventCategory, int64, error)
 }
 
 type EventRepository interface {
-	FindAll(search, categoryID string, limit, offset int) ([]model.Event, int64, error)
+	FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error)
 	FindBySlug(slug string) (*model.Event, error)
 }
