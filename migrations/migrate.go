@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"log"
-	"strings"
 
 	"event-budaya-ticketing-bcc/internal/model"
 
@@ -45,16 +44,4 @@ func Fresh(db *gorm.DB) {
 	db.Migrator().DropTable(&model.PersonalAccessToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
-}
-
-func makeSlug(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	replacer := strings.NewReplacer(
-		" ", "-",
-		"/", "-",
-		",", "",
-		".", "",
-		":", "",
-	)
-	return replacer.Replace(value)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"event-budaya-ticketing-bcc/internal/model"
+	"event-budaya-ticketing-bcc/pkg/helper"
 
 	"gorm.io/gorm"
 )
@@ -56,7 +57,7 @@ func seedEvents(db *gorm.DB) {
 			continue
 		}
 
-		slug := makeSlug(seed.Title)
+		slug := helper.MakeSlug(seed.Title)
 		category := categories[index%len(categories)]
 		description := seed.Description
 		venue := seed.Venue
