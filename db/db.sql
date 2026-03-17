@@ -38,7 +38,7 @@ CREATE TABLE users (
 CREATE TABLE event_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
-    icon TEXT,
+    icon TEXT
 );
 
 
@@ -127,7 +127,7 @@ CREATE TABLE order_items (
     ticket_id UUID NOT NULL
         REFERENCES event_tickets(id),
 
-    quantity INT NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
     price NUMERIC(12,2) NOT NULL
 );
 
@@ -165,6 +165,13 @@ CREATE TABLE tickets (
 
     ticket_code VARCHAR(100) UNIQUE NOT NULL,
     qr_code TEXT,
+
+    holder_name VARCHAR(150) NOT NULL,
+    identity_type VARCHAR(50) NOT NULL,
+    identity_number VARCHAR(100) NOT NULL,
+    holder_phone VARCHAR(20) NOT NULL,
+    holder_email VARCHAR(150) NOT NULL,
+    notes TEXT NOT NULL,
 
     is_used BOOLEAN DEFAULT FALSE,
     used_at TIMESTAMP,
@@ -244,6 +251,9 @@ CREATE INDEX idx_event_tickets_event ON event_tickets(event_id);
 
 CREATE INDEX idx_orders_user ON orders(user_id);
 CREATE INDEX idx_orders_status ON orders(status);
+
+CREATE INDEX idx_tickets_order_item ON tickets(order_item_id);
+CREATE INDEX idx_tickets_identity_number ON tickets(identity_number);
 
 CREATE INDEX idx_comments_event ON event_comments(event_id);
 
