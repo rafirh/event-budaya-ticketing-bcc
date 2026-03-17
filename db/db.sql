@@ -57,6 +57,7 @@ CREATE TABLE events (
     title VARCHAR(200) NOT NULL,
     slug VARCHAR(200) UNIQUE,
 
+    summary VARCHAR(255),
     description TEXT,
 
     venue VARCHAR(200),

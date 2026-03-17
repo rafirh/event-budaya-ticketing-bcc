@@ -20,7 +20,7 @@ func (r *eventRepository) FindAll(search, categoryID string, limit, offset int) 
 
 	if search != "" {
 		searchKeyword := "%" + search + "%"
-		baseQuery = baseQuery.Where("title ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword)
+		baseQuery = baseQuery.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)
 	}
 
 	if categoryID != "" {
@@ -40,7 +40,7 @@ func (r *eventRepository) FindAll(search, categoryID string, limit, offset int) 
 			query := db
 			if search != "" {
 				searchKeyword := "%" + search + "%"
-				query = query.Where("title ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword)
+				query = query.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)
 			}
 			if categoryID != "" {
 				query = query.Where("category_id = ?", categoryID)

@@ -19,9 +19,11 @@ type EventPromoterSummary struct {
 }
 
 type EventListResponse struct {
+	ID                   uuid.UUID             `json:"id"`
 	Category             *EventCategorySummary `json:"category"`
 	BannerURL            *string               `json:"banner_url"`
 	Slug                 *string               `json:"slug"`
+	Summary              *string               `json:"summary"`
 	StartDate            *time.Time            `json:"start_date"`
 	EndDate              *time.Time            `json:"end_date"`
 	RegistrationDeadline *time.Time            `json:"registration_deadline"`
@@ -38,6 +40,7 @@ type EventDetailResponse struct {
 	Category             *EventCategorySummary `json:"category"`
 	Title                string                `json:"title"`
 	Slug                 *string               `json:"slug"`
+	Summary              *string               `json:"summary"`
 	Description          *string               `json:"description"`
 	Venue                *string               `json:"venue"`
 	Address              *string               `json:"address"`
@@ -62,14 +65,16 @@ func ToEventListResponse(event model.Event) EventListResponse {
 	}
 
 	return EventListResponse{
+		ID:                   event.ID,
 		Category:             category,
 		BannerURL:            event.BannerURL,
 		Slug:                 event.Slug,
+		Title:                event.Title,
+		Summary:              event.Summary,
 		StartDate:            event.StartDate,
 		EndDate:              event.EndDate,
 		RegistrationDeadline: event.RegistrationDeadline,
 		Venue:                event.Venue,
-		Title:                event.Title,
 		Price:                event.Price,
 		Quota:                event.Quota,
 		Sold:                 event.Sold,
@@ -94,6 +99,7 @@ func ToEventDetailResponse(event model.Event) EventDetailResponse {
 		Category:             category,
 		Title:                event.Title,
 		Slug:                 event.Slug,
+		Summary:              event.Summary,
 		Description:          event.Description,
 		Venue:                event.Venue,
 		Address:              event.Address,

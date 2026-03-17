@@ -12,6 +12,7 @@ type Event struct {
 	CategoryID           *uuid.UUID     `gorm:"type:uuid;index" json:"category_id"`
 	Title                string         `gorm:"size:200;not null" json:"title"`
 	Slug                 *string        `gorm:"size:200;uniqueIndex" json:"slug"`
+	Summary              *string        `gorm:"size:255" json:"summary"`
 	Description          *string        `json:"description"`
 	Venue                *string        `gorm:"size:200" json:"venue"`
 	Address              *string        `json:"address"`
