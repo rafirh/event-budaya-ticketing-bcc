@@ -8,7 +8,7 @@ import (
 )
 
 type EventUsecase interface {
-	GetAll() ([]dto.EventResponse, error)
+	GetAll(search, categoryID string, page, limit int) ([]dto.EventResponse, int64, error)
 	GetBySlug(slug string) (*dto.EventResponse, error)
 }
 
@@ -20,10 +20,12 @@ func NewEventUsecase(eventRepo repository.EventRepository) EventUsecase {
 	return &eventUsecase{eventRepo: eventRepo}
 }
 
-func (u *eventUsecase) GetAll() ([]dto.EventResponse, error) {
-	events, err := u.eventRepo.FindAll()
+func (u *eventUsecase) GetAll(search, categoryID string, page, limit int) ([]dto.EventResponse, int64, error) {
+	offset := (page - 1) * limit
+
+	events, total, err := u.eventRepo.FindAll(search, categoryID, limit, offset)
 	if err != nil {
-		return nil, errors.New("failed to fetch events")
+		return nil, 0, errors.New("failed to fetch events")
 	}
 
 	responses := make([]dto.EventResponse, 0, len(events))
@@ -31,7 +33,7 @@ func (u *eventUsecase) GetAll() ([]dto.EventResponse, error) {
 		responses = append(responses, dto.ToEventResponse(event))
 	}
 
-	return responses, nil
+	return responses, total, nil
 }
 
 func (u *eventUsecase) GetBySlug(slug string) (*dto.EventResponse, error) {

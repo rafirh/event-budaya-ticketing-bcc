@@ -28,6 +28,6 @@ type EventCategoryRepository interface {
 }
 
 type EventRepository interface {
-	FindAll() ([]model.Event, error)
+	FindAll(search, categoryID string, limit, offset int) ([]model.Event, int64, error)
 	FindBySlug(slug string) (*model.Event, error)
 }
