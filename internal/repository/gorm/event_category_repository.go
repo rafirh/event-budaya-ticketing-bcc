@@ -15,7 +15,12 @@ func NewEventCategoryRepository(db *gorm.DB) repository.EventCategoryRepository 
 	return &eventCategoryRepository{db: db}
 }
 
-func (r *eventCategoryRepository) FindAll() ([]model.EventCategory, error) {
+func (r *eventCategoryRepository) FindAll(limit, offset int) ([]model.EventCategory, int64, error) {
+	var total int64
+	if err := r.db.Table("event_categories").Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	var categories []model.EventCategory
 	err := r.db.
 		Table("event_categories").
@@ -23,9 +28,11 @@ func (r *eventCategoryRepository) FindAll() ([]model.EventCategory, error) {
 		Joins("LEFT JOIN events ON events.category_id = event_categories.id").
 		Group("event_categories.id, event_categories.name, event_categories.icon").
 		Order("event_categories.name ASC").
+		Limit(limit).
+		Offset(offset).
 		Scan(&categories).Error
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return categories, nil
+	return categories, total, nil
 }

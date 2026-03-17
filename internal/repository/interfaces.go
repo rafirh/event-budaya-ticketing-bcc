@@ -24,7 +24,7 @@ type PersonalAccessTokenRepository interface {
 }
 
 type EventCategoryRepository interface {
-	FindAll() ([]model.EventCategory, error)
+	FindAll(limit, offset int) ([]model.EventCategory, int64, error)
 }
 
 type EventRepository interface {
