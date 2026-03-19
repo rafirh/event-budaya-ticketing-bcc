@@ -68,8 +68,13 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 		return nil, errors.New("at least one ticket is required")
 	}
 
-	if event.Quota-event.Sold < ticketCount {
-		return nil, errors.New("ticket quota is not enough")
+	if event.Sold >= event.Quota {
+		return nil, errors.New("ticket is sold out")
+	}
+
+	if (event.Sold + ticketCount) > event.Quota {
+		remaining := event.Quota - event.Sold
+		return nil, fmt.Errorf("only %d tickets available", remaining)
 	}
 
 	parsedUserID, err := uuid.Parse(userID)
@@ -156,6 +161,14 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 		return nil, errors.New("failed to update payment url")
 	}
 
+	event.Sold += ticketCount
+	if event.Sold > event.Quota {
+		return nil, errors.New("failed to reserve event tickets")
+	}
+	if err := u.eventRepo.Update(event); err != nil {
+		return nil, errors.New("failed to reserve event tickets")
+	}
+
 	return &dto.CreateTicketOrderResponse{
 		OrderID:         order.ID,
 		EventID:         order.EventID,
@@ -209,22 +222,27 @@ func (u *orderUsecase) HandleMidtransWebhook(req *dto.MidtransWebhookRequest) er
 	}
 
 	wasPaid := order.Status == "paid"
+	wasPending := order.Status == "pending"
 	order.Status = orderStatus
 	if err := u.orderRepo.Update(order); err != nil {
 		return errors.New("failed to update order")
 	}
 
 	if orderStatus == "paid" && !wasPaid {
+		return nil
+	}
+
+	if orderStatus == "cancelled" && wasPending {
 		event, err := u.eventRepo.FindByID(order.EventID.String())
 		if err != nil {
 			return errors.New("event not found")
 		}
-		event.Sold += order.Quantity
-		if event.Sold > event.Quota {
-			event.Sold = event.Quota
+		event.Sold -= order.Quantity
+		if event.Sold < 0 {
+			event.Sold = 0
 		}
 		if err := u.eventRepo.Update(event); err != nil {
-			return errors.New("failed to update event sold")
+			return errors.New("failed to restore event tickets")
 		}
 	}
 
