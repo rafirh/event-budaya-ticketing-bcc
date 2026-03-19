@@ -267,7 +267,7 @@ func (u *orderUsecase) GetMyOrders(userID string) ([]dto.MyOrderResponse, error)
 		result = append(result, dto.MyOrderResponse{
 			OrderID:       order.ID,
 			EventID:       order.EventID,
-			EventName:     order.Event.Name,
+			EventName:     order.Event.Title,
 			TicketCount:   order.Quantity,
 			TotalPrice:    order.TotalPrice,
 			PaymentStatus: paymentData.Status,
@@ -319,7 +319,7 @@ func (u *orderUsecase) GetMyOrderDetail(userID, orderID string) (*dto.MyOrderDet
 	return &dto.MyOrderDetailResponse{
 		OrderID:     order.ID,
 		EventID:     order.EventID,
-		EventName:   order.Event.Name,
+		EventName:   order.Event.Title,
 		TicketCount: order.Quantity,
 		UnitPrice:   order.UnitPrice,
 		ServiceFee:  order.ServiceFee,
