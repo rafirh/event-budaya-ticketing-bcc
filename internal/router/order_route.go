@@ -9,8 +9,8 @@ import (
 )
 
 func orderRoutes(api fiber.Router, orderHandler *handler.OrderHandler, tokenRepo repository.PersonalAccessTokenRepository) {
-	orders := api.Group("/orders", middleware.AuthMiddleware(tokenRepo))
-	orders.Post("/tickets", orderHandler.CreateTicketOrder)
+	checkout := api.Group("/checkout", middleware.AuthMiddleware(tokenRepo))
+	checkout.Post("", orderHandler.CreateTicketOrder)
 }
 
 func webhookRoutes(api fiber.Router, orderHandler *handler.OrderHandler) {
