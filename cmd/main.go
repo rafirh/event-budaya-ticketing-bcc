@@ -75,17 +75,19 @@ func main() {
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo)
 	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, midtransClient, config.AppConfig.MidtransServer)
+	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
 	eventHandler := handler.NewEventHandler(eventUsecase)
 	orderHandler := handler.NewOrderHandler(orderUsecase)
+	ticketHandler := handler.NewTicketHandler(ticketUsecase)
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
 		ErrorHandler: customErrorHandler,
 	})
 
-	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, orderHandler, tokenRepo)
+	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, orderHandler, ticketHandler, tokenRepo)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

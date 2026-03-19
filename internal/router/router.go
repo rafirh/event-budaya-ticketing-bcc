@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, eventHandler *handler.EventHandler, orderHandler *handler.OrderHandler, tokenRepo repository.PersonalAccessTokenRepository) {
+func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandler *handler.CategoryHandler, eventHandler *handler.EventHandler, orderHandler *handler.OrderHandler, ticketHandler *handler.TicketHandler, tokenRepo repository.PersonalAccessTokenRepository) {
 	app.Static("/uploads", "./public/uploads")
 	app.Static("/", "./public")
 
@@ -21,6 +21,7 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandl
 	categoryRoutes(api, categoryHandler)
 	eventRoutes(api, eventHandler)
 	orderRoutes(api, orderHandler, tokenRepo)
+	ticketRoutes(api, ticketHandler, tokenRepo)
 	webhookRoutes(api, orderHandler)
 }
 

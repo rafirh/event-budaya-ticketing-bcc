@@ -57,3 +57,43 @@ func (h *OrderHandler) MidtransWebhook(c *fiber.Ctx) error {
 
 	return response.Success(c, fiber.StatusOK, "Webhook processed", nil)
 }
+
+func (h *OrderHandler) GetMyOrders(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	orders, err := h.orderUsecase.GetMyOrders(userID)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Orders retrieved successfully", orders)
+}
+
+func (h *OrderHandler) GetMyOrderDetail(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	orderID := c.Params("id")
+	if orderID == "" {
+		return response.Error(c, fiber.StatusBadRequest, "Order ID is required")
+	}
+
+	orderDetail, err := h.orderUsecase.GetMyOrderDetail(userID, orderID)
+	if err != nil {
+		switch err.Error() {
+		case "order not found":
+			return response.Error(c, fiber.StatusNotFound, err.Error())
+		case "unauthorized":
+			return response.Error(c, fiber.StatusForbidden, err.Error())
+		default:
+			return response.Error(c, fiber.StatusBadRequest, err.Error())
+		}
+	}
+
+	return response.Success(c, fiber.StatusOK, "Order detail retrieved successfully", orderDetail)
+}
