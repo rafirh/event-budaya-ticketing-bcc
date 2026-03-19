@@ -37,7 +37,8 @@ CREATE TABLE users (
 -- =====================================================
 CREATE TABLE event_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    icon TEXT
 );
 
 
@@ -56,6 +57,7 @@ CREATE TABLE events (
     title VARCHAR(200) NOT NULL,
     slug VARCHAR(200) UNIQUE,
 
+    summary VARCHAR(255),
     description TEXT,
 
     venue VARCHAR(200),
@@ -64,8 +66,12 @@ CREATE TABLE events (
 
     start_date TIMESTAMP,
     end_date TIMESTAMP,
+    registration_deadline TIMESTAMP,
 
     is_paid BOOLEAN DEFAULT TRUE,
+    price NUMERIC(12,2) DEFAULT 0,
+    quota INT NOT NULL DEFAULT 0 CHECK (quota >= 0),
+    sold INT DEFAULT 0 CHECK (sold >= 0),
 
     banner_url TEXT,
 
@@ -78,24 +84,6 @@ CREATE TABLE events (
 
 
 -- =====================================================
--- EVENT TICKETS
--- =====================================================
-CREATE TABLE event_tickets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    event_id UUID NOT NULL
-        REFERENCES events(id) ON DELETE CASCADE,
-
-    name VARCHAR(100) NOT NULL,
-    price NUMERIC(12,2) DEFAULT 0,
-    quota INT NOT NULL,
-    sold INT DEFAULT 0,
-
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
-
--- =====================================================
 -- ORDERS
 -- =====================================================
 CREATE TABLE orders (
@@ -104,6 +92,12 @@ CREATE TABLE orders (
     user_id UUID NOT NULL
         REFERENCES users(id),
 
+    event_id UUID NOT NULL
+        REFERENCES events(id) ON DELETE CASCADE,
+
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price NUMERIC(12,2) NOT NULL,
+    service_fee NUMERIC(12,2) DEFAULT 0,
     total_price NUMERIC(12,2) DEFAULT 0,
 
     status VARCHAR(20) DEFAULT 'pending'
@@ -111,23 +105,6 @@ CREATE TABLE orders (
 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
-);
-
-
--- =====================================================
--- ORDER ITEMS
--- =====================================================
-CREATE TABLE order_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    order_id UUID NOT NULL
-        REFERENCES orders(id) ON DELETE CASCADE,
-
-    ticket_id UUID NOT NULL
-        REFERENCES event_tickets(id),
-
-    quantity INT NOT NULL,
-    price NUMERIC(12,2) NOT NULL
 );
 
 
@@ -159,11 +136,18 @@ CREATE TABLE payments (
 CREATE TABLE tickets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    order_item_id UUID NOT NULL
-        REFERENCES order_items(id) ON DELETE CASCADE,
+    order_id UUID NOT NULL
+        REFERENCES orders(id) ON DELETE CASCADE,
 
     ticket_code VARCHAR(100) UNIQUE NOT NULL,
     qr_code TEXT,
+
+    holder_name VARCHAR(150) NOT NULL,
+    identity_type VARCHAR(50) NOT NULL,
+    identity_number VARCHAR(100) NOT NULL,
+    holder_phone VARCHAR(20) NOT NULL,
+    holder_email VARCHAR(150) NOT NULL,
+    notes TEXT NOT NULL,
 
     is_used BOOLEAN DEFAULT FALSE,
     used_at TIMESTAMP,
@@ -239,10 +223,12 @@ CREATE INDEX idx_events_promoter ON events(promoter_id);
 CREATE INDEX idx_events_category ON events(category_id);
 CREATE INDEX idx_events_status ON events(status);
 
-CREATE INDEX idx_event_tickets_event ON event_tickets(event_id);
-
 CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE INDEX idx_orders_event ON orders(event_id);
 CREATE INDEX idx_orders_status ON orders(status);
+
+CREATE INDEX idx_tickets_order ON tickets(order_id);
+CREATE INDEX idx_tickets_identity_number ON tickets(identity_number);
 
 CREATE INDEX idx_comments_event ON event_comments(event_id);
 

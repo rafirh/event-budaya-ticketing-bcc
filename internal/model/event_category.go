@@ -3,9 +3,10 @@ package model
 import "github.com/google/uuid"
 
 type EventCategory struct {
-	ID   uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	Name string    `gorm:"size:100;not null" json:"name"`
-	Logo *string   `json:"logo"`
+	ID         uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Name       string    `gorm:"size:100;not null" json:"name"`
+	Icon       *string   `json:"icon"`
+	EventCount int64     `gorm:"->;column:event_count;-:migration" json:"event_count"`
 }
 
 func (EventCategory) TableName() string {

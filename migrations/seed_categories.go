@@ -9,11 +9,11 @@ import (
 )
 
 func seedEventCategories(db *gorm.DB) {
-	baseLogoURL := "https://event-budaya.iccn.or.id/seeders/categories/"
+	baseIconURL := "https://event-budaya.iccn.or.id/seeders/categories/"
 
 	categories := []struct {
 		Name     string
-		LogoFile string
+		IconFile string
 	}{
 		{"Seni Pertunjukan", "seni_pertunjukan.svg"},
 		{"Musik Tradisional", "musik_tradisional.svg"},
@@ -32,10 +32,10 @@ func seedEventCategories(db *gorm.DB) {
 			continue
 		}
 
-		logoURL := baseLogoURL + cat.LogoFile
+		IconURL := baseIconURL + cat.IconFile
 		category := model.EventCategory{
 			Name: cat.Name,
-			Logo: &logoURL,
+			Icon: &IconURL,
 		}
 		db.Create(&category)
 		log.Printf("Seeded category: %s", cat.Name)

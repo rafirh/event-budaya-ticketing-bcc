@@ -24,6 +24,9 @@ type Config struct {
 	S3Bucket       string
 	S3Region       string
 	S3PublicBase   string
+	MidtransEnv    string
+	MidtransServer string
+	MidtransClient string
 }
 
 var AppConfig *Config
@@ -52,6 +55,9 @@ func LoadConfig() {
 		S3Bucket:       getEnv("S3_BUCKET", ""),
 		S3Region:       getEnv("S3_REGION", ""),
 		S3PublicBase:   getEnv("S3_PUBLIC_BASE_URL", ""),
+		MidtransEnv:    getEnv("MIDTRANS_ENV", "sandbox"),
+		MidtransServer: getEnv("MIDTRANS_SERVER_KEY", ""),
+		MidtransClient: getEnv("MIDTRANS_CLIENT_KEY", ""),
 	}
 }
 

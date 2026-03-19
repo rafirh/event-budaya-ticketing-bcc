@@ -8,7 +8,7 @@ import (
 )
 
 type CategoryUsecase interface {
-	GetAll() ([]model.EventCategory, error)
+	GetAll(page, limit int, sortBy, sortOrder string) ([]model.EventCategory, int64, error)
 }
 
 type categoryUsecase struct {
@@ -19,10 +19,12 @@ func NewCategoryUsecase(categoryRepo repository.EventCategoryRepository) Categor
 	return &categoryUsecase{categoryRepo: categoryRepo}
 }
 
-func (u *categoryUsecase) GetAll() ([]model.EventCategory, error) {
-	categories, err := u.categoryRepo.FindAll()
+func (u *categoryUsecase) GetAll(page, limit int, sortBy, sortOrder string) ([]model.EventCategory, int64, error) {
+	offset := (page - 1) * limit
+
+	categories, total, err := u.categoryRepo.FindAll(limit, offset, sortBy, sortOrder)
 	if err != nil {
-		return nil, errors.New("failed to fetch categories")
+		return nil, 0, errors.New("failed to fetch categories")
 	}
-	return categories, nil
+	return categories, total, nil
 }
