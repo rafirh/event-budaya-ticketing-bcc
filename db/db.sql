@@ -119,6 +119,7 @@ CREATE TABLE payments (
 
     payment_method VARCHAR(50),
     payment_gateway VARCHAR(50),
+    payment_url TEXT,
 
     amount NUMERIC(12,2),
 

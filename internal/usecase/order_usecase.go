@@ -150,6 +150,12 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 		return nil, errors.New("failed to create midtrans transaction")
 	}
 
+	paymentURL := snapResp.RedirectURL
+	paymentData.PaymentURL = &paymentURL
+	if err := u.paymentRepo.Update(paymentData); err != nil {
+		return nil, errors.New("failed to update payment url")
+	}
+
 	return &dto.CreateTicketOrderResponse{
 		OrderID:         order.ID,
 		EventID:         order.EventID,
