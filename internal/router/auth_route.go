@@ -13,9 +13,9 @@ func authRoutes(api fiber.Router, authHandler *handler.AuthHandler, tokenRepo re
 
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+	auth.Post("/logout", middleware.AuthMiddleware(tokenRepo), authHandler.Logout)
 
-	protected := auth.Group("", middleware.AuthMiddleware(tokenRepo))
-	protected.Get("/me", authHandler.Me)
-	protected.Patch("/profile", authHandler.UpdateProfile)
-	protected.Post("/logout", authHandler.Logout)
+	me := api.Group("/me", middleware.AuthMiddleware(tokenRepo))
+	me.Get("", authHandler.Me)
+	me.Patch("", authHandler.UpdateProfile)
 }

@@ -21,6 +21,8 @@ const serviceFeePerTicket = 2000.0
 type OrderUsecase interface {
 	CreateTicketOrder(userID string, req *dto.CreateTicketOrderRequest) (*dto.CreateTicketOrderResponse, error)
 	HandleMidtransWebhook(req *dto.MidtransWebhookRequest) error
+	GetMyOrders(userID string) ([]dto.MyOrderResponse, error)
+	GetMyOrderDetail(userID, orderID string) (*dto.MyOrderDetailResponse, error)
 }
 
 type orderUsecase struct {
@@ -247,6 +249,93 @@ func (u *orderUsecase) HandleMidtransWebhook(req *dto.MidtransWebhookRequest) er
 	}
 
 	return nil
+}
+
+func (u *orderUsecase) GetMyOrders(userID string) ([]dto.MyOrderResponse, error) {
+	orders, err := u.orderRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, errors.New("failed to fetch orders")
+	}
+
+	result := make([]dto.MyOrderResponse, 0, len(orders))
+	for _, order := range orders {
+		paymentData, err := u.paymentRepo.FindByOrderID(order.ID.String())
+		if err != nil {
+			continue
+		}
+
+		result = append(result, dto.MyOrderResponse{
+			OrderID:       order.ID,
+			EventID:       order.EventID,
+			EventName:     order.Event.Name,
+			TicketCount:   order.Quantity,
+			TotalPrice:    order.TotalPrice,
+			PaymentStatus: paymentData.Status,
+			PaymentURL:    paymentData.PaymentURL,
+			OrderStatus:   order.Status,
+			CreatedAt:     order.CreatedAt,
+		})
+	}
+
+	return result, nil
+}
+
+func (u *orderUsecase) GetMyOrderDetail(userID, orderID string) (*dto.MyOrderDetailResponse, error) {
+	order, err := u.orderRepo.FindByIDWithRelations(orderID)
+	if err != nil {
+		return nil, errors.New("order not found")
+	}
+
+	if order.UserID.String() != userID {
+		return nil, errors.New("unauthorized")
+	}
+
+	paymentData, err := u.paymentRepo.FindByOrderID(orderID)
+	if err != nil {
+		return nil, errors.New("payment not found")
+	}
+
+	tickets, err := u.ticketRepo.FindByOrderID(orderID)
+	if err != nil {
+		return nil, errors.New("failed to fetch tickets")
+	}
+
+	ticketDetails := make([]dto.TicketDetail, 0, len(tickets))
+	for _, ticket := range tickets {
+		ticketDetails = append(ticketDetails, dto.TicketDetail{
+			ID:             ticket.ID,
+			TicketCode:     ticket.TicketCode,
+			HolderName:     ticket.HolderName,
+			IdentityType:   ticket.IdentityType,
+			IdentityNumber: ticket.IdentityNumber,
+			HolderPhone:    ticket.HolderPhone,
+			HolderEmail:    ticket.HolderEmail,
+			Notes:          ticket.Notes,
+			IsUsed:         ticket.IsUsed,
+			UsedAt:         ticket.UsedAt,
+		})
+	}
+
+	return &dto.MyOrderDetailResponse{
+		OrderID:     order.ID,
+		EventID:     order.EventID,
+		EventName:   order.Event.Name,
+		TicketCount: order.Quantity,
+		UnitPrice:   order.UnitPrice,
+		ServiceFee:  order.ServiceFee,
+		TotalPrice:  order.TotalPrice,
+		OrderStatus: order.Status,
+		CreatedAt:   order.CreatedAt,
+		Tickets:     ticketDetails,
+		Payment: dto.PaymentDetail{
+			PaymentMethod:  paymentData.PaymentMethod,
+			PaymentGateway: paymentData.PaymentGateway,
+			Amount:         paymentData.Amount,
+			Status:         paymentData.Status,
+			PaymentURL:     paymentData.PaymentURL,
+			PaidAt:         paymentData.PaidAt,
+		},
+	}, nil
 }
 
 func mapMidtransStatus(transactionStatus, fraudStatus string) (paymentStatus, orderStatus string) {

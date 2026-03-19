@@ -37,11 +37,14 @@ type EventRepository interface {
 type OrderRepository interface {
 	Create(order *model.Order) error
 	FindByID(id string) (*model.Order, error)
+	FindByIDWithRelations(id string) (*model.Order, error)
+	FindByUserID(userID string) ([]model.Order, error)
 	Update(order *model.Order) error
 }
 
 type TicketRepository interface {
 	CreateBatch(tickets []model.Ticket) error
+	FindByOrderID(orderID string) ([]model.Ticket, error)
 }
 
 type PaymentRepository interface {

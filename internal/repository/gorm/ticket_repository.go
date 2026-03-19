@@ -21,3 +21,12 @@ func (r *ticketRepository) CreateBatch(tickets []model.Ticket) error {
 	}
 	return r.db.Create(&tickets).Error
 }
+
+func (r *ticketRepository) FindByOrderID(orderID string) ([]model.Ticket, error) {
+	var tickets []model.Ticket
+	err := r.db.Where("order_id = ?", orderID).Find(&tickets).Error
+	if err != nil {
+		return nil, err
+	}
+	return tickets, nil
+}
