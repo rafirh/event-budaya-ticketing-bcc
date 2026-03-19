@@ -92,6 +92,11 @@ CREATE TABLE orders (
     user_id UUID NOT NULL
         REFERENCES users(id),
 
+    event_id UUID NOT NULL
+        REFERENCES events(id) ON DELETE CASCADE,
+
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price NUMERIC(12,2) NOT NULL,
     total_price NUMERIC(12,2) DEFAULT 0,
 
     status VARCHAR(20) DEFAULT 'pending'
@@ -99,23 +104,6 @@ CREATE TABLE orders (
 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
-);
-
-
--- =====================================================
--- ORDER ITEMS
--- =====================================================
-CREATE TABLE order_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    order_id UUID NOT NULL
-        REFERENCES orders(id) ON DELETE CASCADE,
-
-    event_id UUID NOT NULL
-        REFERENCES events(id),
-
-    quantity INT NOT NULL CHECK (quantity > 0),
-    price NUMERIC(12,2) NOT NULL
 );
 
 
@@ -147,8 +135,8 @@ CREATE TABLE payments (
 CREATE TABLE tickets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    order_item_id UUID NOT NULL
-        REFERENCES order_items(id) ON DELETE CASCADE,
+    order_id UUID NOT NULL
+        REFERENCES orders(id) ON DELETE CASCADE,
 
     ticket_code VARCHAR(100) UNIQUE NOT NULL,
     qr_code TEXT,
@@ -235,10 +223,10 @@ CREATE INDEX idx_events_category ON events(category_id);
 CREATE INDEX idx_events_status ON events(status);
 
 CREATE INDEX idx_orders_user ON orders(user_id);
+CREATE INDEX idx_orders_event ON orders(event_id);
 CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_order_items_event ON order_items(event_id);
 
-CREATE INDEX idx_tickets_order_item ON tickets(order_item_id);
+CREATE INDEX idx_tickets_order ON tickets(order_id);
 CREATE INDEX idx_tickets_identity_number ON tickets(identity_number);
 
 CREATE INDEX idx_comments_event ON event_comments(event_id);
