@@ -45,6 +45,8 @@ type OrderRepository interface {
 type TicketRepository interface {
 	CreateBatch(tickets []model.Ticket) error
 	FindByOrderID(orderID string) ([]model.Ticket, error)
+	FindByID(id string) (*model.Ticket, error)
+	FindByUserID(userID string) ([]model.Ticket, error)
 }
 
 type PaymentRepository interface {
