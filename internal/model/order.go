@@ -12,6 +12,7 @@ type Order struct {
 	EventID    uuid.UUID  `gorm:"type:uuid;not null;index" json:"event_id"`
 	Quantity   int        `gorm:"not null" json:"quantity"`
 	UnitPrice  float64    `gorm:"type:numeric(12,2);not null" json:"unit_price"`
+	ServiceFee float64    `gorm:"type:numeric(12,2);default:0" json:"service_fee"`
 	TotalPrice float64    `gorm:"type:numeric(12,2);default:0" json:"total_price"`
 	Status     string     `gorm:"size:20;default:pending" json:"status"`
 	CreatedAt  time.Time  `json:"created_at"`

@@ -29,5 +29,23 @@ type EventCategoryRepository interface {
 
 type EventRepository interface {
 	FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error)
+	FindByID(id string) (*model.Event, error)
 	FindBySlug(slug string) (*model.Event, error)
+	Update(event *model.Event) error
+}
+
+type OrderRepository interface {
+	Create(order *model.Order) error
+	FindByID(id string) (*model.Order, error)
+	Update(order *model.Order) error
+}
+
+type TicketRepository interface {
+	CreateBatch(tickets []model.Ticket) error
+}
+
+type PaymentRepository interface {
+	Create(payment *model.Payment) error
+	FindByOrderID(orderID string) (*model.Payment, error)
+	Update(payment *model.Payment) error
 }

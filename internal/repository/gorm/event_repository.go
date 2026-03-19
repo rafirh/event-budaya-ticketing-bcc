@@ -73,6 +73,23 @@ func (r *eventRepository) FindBySlug(slug string) (*model.Event, error) {
 	return &event, nil
 }
 
+func (r *eventRepository) FindByID(id string) (*model.Event, error) {
+	var event model.Event
+	err := r.db.
+		Preload("Promoter").
+		Preload("Category").
+		Where("id = ?", id).
+		First(&event).Error
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
+func (r *eventRepository) Update(event *model.Event) error {
+	return r.db.Save(event).Error
+}
+
 func buildEventOrderBy(sortBy, sortOrder string) string {
 	column := map[string]string{
 		"title":                 "title",

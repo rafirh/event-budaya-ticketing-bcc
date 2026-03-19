@@ -13,6 +13,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/router"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/migrations"
+	"event-budaya-ticketing-bcc/pkg/payment"
 	"event-budaya-ticketing-bcc/pkg/storage"
 
 	"github.com/gofiber/fiber/v2"
@@ -49,6 +50,10 @@ func main() {
 	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
 	categoryRepo := gormRepo.NewEventCategoryRepository(config.DB)
 	eventRepo := gormRepo.NewEventRepository(config.DB)
+	orderRepo := gormRepo.NewOrderRepository(config.DB)
+	ticketRepo := gormRepo.NewTicketRepository(config.DB)
+	paymentRepo := gormRepo.NewPaymentRepository(config.DB)
+	midtransClient := payment.NewMidtransClient(config.AppConfig.MidtransServer, config.AppConfig.MidtransEnv)
 
 	var uploader storage.Uploader
 	if config.AppConfig.S3Bucket != "" && config.AppConfig.S3Region != "" {
@@ -69,16 +74,18 @@ func main() {
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo)
+	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, midtransClient, config.AppConfig.MidtransServer)
 	authHandler := handler.NewAuthHandler(authUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
 	eventHandler := handler.NewEventHandler(eventUsecase)
+	orderHandler := handler.NewOrderHandler(orderUsecase)
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
 		ErrorHandler: customErrorHandler,
 	})
 
-	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, tokenRepo)
+	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, orderHandler, tokenRepo)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

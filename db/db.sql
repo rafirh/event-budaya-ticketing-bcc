@@ -97,6 +97,7 @@ CREATE TABLE orders (
 
     quantity INT NOT NULL CHECK (quantity > 0),
     unit_price NUMERIC(12,2) NOT NULL,
+    service_fee NUMERIC(12,2) DEFAULT 0,
     total_price NUMERIC(12,2) DEFAULT 0,
 
     status VARCHAR(20) DEFAULT 'pending'
