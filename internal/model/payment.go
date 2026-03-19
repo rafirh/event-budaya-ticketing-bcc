@@ -11,6 +11,7 @@ type Payment struct {
 	OrderID        uuid.UUID  `gorm:"type:uuid;uniqueIndex;not null" json:"order_id"`
 	PaymentMethod  *string    `gorm:"size:50" json:"payment_method"`
 	PaymentGateway *string    `gorm:"size:50" json:"payment_gateway"`
+	PaymentURL     *string    `json:"payment_url"`
 	Amount         float64    `gorm:"type:numeric(12,2)" json:"amount"`
 	Status         string     `gorm:"size:20" json:"status"`
 	PaidAt         *time.Time `json:"paid_at"`

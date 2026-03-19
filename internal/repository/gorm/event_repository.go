@@ -18,7 +18,7 @@ func NewEventRepository(db *gorm.DB) repository.EventRepository {
 }
 
 func (r *eventRepository) FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error) {
-	baseQuery := r.db.Model(&model.Event{})
+	baseQuery := r.db.Model(&model.Event{}).Where("status = ?", "published")
 	orderBy := buildEventOrderBy(sortBy, sortOrder)
 
 	if search != "" {
@@ -40,7 +40,7 @@ func (r *eventRepository) FindAll(search, categoryID, sortBy, sortOrder string, 
 		Preload("Promoter").
 		Preload("Category").
 		Scopes(func(db *gorm.DB) *gorm.DB {
-			query := db
+			query := db.Where("status = ?", "published")
 			if search != "" {
 				searchKeyword := "%" + search + "%"
 				query = query.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)
@@ -65,7 +65,7 @@ func (r *eventRepository) FindBySlug(slug string) (*model.Event, error) {
 	err := r.db.
 		Preload("Promoter").
 		Preload("Category").
-		Where("slug = ?", slug).
+		Where("slug = ? AND status = ?", slug, "published").
 		First(&event).Error
 	if err != nil {
 		return nil, err
