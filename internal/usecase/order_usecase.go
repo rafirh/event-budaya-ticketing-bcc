@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"event-budaya-ticketing-bcc/pkg/payment"
 
 	"github.com/google/uuid"
+	"github.com/skip2/go-qrcode"
 )
 
 const serviceFeePerTicket = 2000.0
@@ -108,9 +110,16 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 			notes = strings.TrimSpace(*t.Notes)
 		}
 
+		ticketCode := generateTicketCode(order.ID)
+		qrCodeBase64, err := generateTicketQRCodeBase64(ticketCode)
+		if err != nil {
+			return nil, errors.New("failed to generate ticket qr code")
+		}
+
 		ticket := model.Ticket{
 			OrderID:        order.ID,
-			TicketCode:     generateTicketCode(order.ID),
+			TicketCode:     ticketCode,
+			QRCode:         &qrCodeBase64,
 			HolderName:     t.HolderName,
 			IdentityType:   t.IdentityType,
 			IdentityNumber: t.IdentityNumber,
@@ -366,6 +375,15 @@ func isValidMidtransSignature(req *dto.MidtransWebhookRequest, serverKey string)
 func generateTicketCode(orderID uuid.UUID) string {
 	timestamp := time.Now().UnixNano()
 	return fmt.Sprintf("TIX-%s-%d", strings.ToUpper(orderID.String()[0:8]), timestamp)
+}
+
+func generateTicketQRCodeBase64(ticketCode string) (string, error) {
+	pngData, err := qrcode.Encode(ticketCode, qrcode.Medium, 256)
+	if err != nil {
+		return "", err
+	}
+	encoded := base64.StdEncoding.EncodeToString(pngData)
+	return "data:image/png;base64," + encoded, nil
 }
 
 func derefString(value *string) string {
