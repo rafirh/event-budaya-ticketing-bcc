@@ -34,6 +34,12 @@ type EventRepository interface {
 	Update(event *model.Event) error
 }
 
+type EventCommentRepository interface {
+	Create(comment *model.EventComment) error
+	FindByID(id string) (*model.EventComment, error)
+	FindByEventID(eventID string) ([]model.EventComment, error)
+}
+
 type OrderRepository interface {
 	Create(order *model.Order) error
 	FindByID(id string) (*model.Order, error)
