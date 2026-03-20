@@ -11,7 +11,7 @@ import (
 type EventCommentUserSummary struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
-	ProfilePhoto *string   `json:"profile_photo,omitempty"`
+	ProfilePhoto *string   `json:"profile_photo"`
 }
 
 type EventCommentResponse struct {
