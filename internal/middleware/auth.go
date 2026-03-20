@@ -55,3 +55,13 @@ func AdminMiddleware() fiber.Handler {
 		return c.Next()
 	}
 }
+
+func PromoterMiddleware() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		role := c.Locals("userRole")
+		if role == nil || role.(string) != "promotor" {
+			return response.Error(c, fiber.StatusForbidden, "Access denied: promoter role required")
+		}
+		return c.Next()
+	}
+}

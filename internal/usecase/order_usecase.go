@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"event-budaya-ticketing-bcc/pkg/payment"
 
 	"github.com/google/uuid"
+	"github.com/skip2/go-qrcode"
 )
 
 const serviceFeePerTicket = 2000.0
@@ -26,13 +28,15 @@ type OrderUsecase interface {
 }
 
 type orderUsecase struct {
-	userRepo       repository.UserRepository
-	eventRepo      repository.EventRepository
-	orderRepo      repository.OrderRepository
-	ticketRepo     repository.TicketRepository
-	paymentRepo    repository.PaymentRepository
-	midtransClient *payment.Client
-	midtransServer string
+	userRepo        repository.UserRepository
+	eventRepo       repository.EventRepository
+	orderRepo       repository.OrderRepository
+	ticketRepo      repository.TicketRepository
+	paymentRepo     repository.PaymentRepository
+	walletRepo      repository.PromoterWalletRepository
+	transactionRepo repository.WalletTransactionRepository
+	midtransClient  *payment.Client
+	midtransServer  string
 }
 
 func NewOrderUsecase(
@@ -41,17 +45,21 @@ func NewOrderUsecase(
 	orderRepo repository.OrderRepository,
 	ticketRepo repository.TicketRepository,
 	paymentRepo repository.PaymentRepository,
+	walletRepo repository.PromoterWalletRepository,
+	transactionRepo repository.WalletTransactionRepository,
 	midtransClient *payment.Client,
 	midtransServer string,
 ) OrderUsecase {
 	return &orderUsecase{
-		userRepo:       userRepo,
-		eventRepo:      eventRepo,
-		orderRepo:      orderRepo,
-		ticketRepo:     ticketRepo,
-		paymentRepo:    paymentRepo,
-		midtransClient: midtransClient,
-		midtransServer: midtransServer,
+		userRepo:        userRepo,
+		eventRepo:       eventRepo,
+		orderRepo:       orderRepo,
+		ticketRepo:      ticketRepo,
+		paymentRepo:     paymentRepo,
+		walletRepo:      walletRepo,
+		transactionRepo: transactionRepo,
+		midtransClient:  midtransClient,
+		midtransServer:  midtransServer,
 	}
 }
 
@@ -108,9 +116,16 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 			notes = strings.TrimSpace(*t.Notes)
 		}
 
+		ticketCode := generateTicketCode(order.ID)
+		qrCodeBase64, err := generateTicketQRCodeBase64(ticketCode)
+		if err != nil {
+			return nil, errors.New("failed to generate ticket qr code")
+		}
+
 		ticket := model.Ticket{
 			OrderID:        order.ID,
-			TicketCode:     generateTicketCode(order.ID),
+			TicketCode:     ticketCode,
+			QRCode:         &qrCodeBase64,
 			HolderName:     t.HolderName,
 			IdentityType:   t.IdentityType,
 			IdentityNumber: t.IdentityNumber,
@@ -231,6 +246,42 @@ func (u *orderUsecase) HandleMidtransWebhook(req *dto.MidtransWebhookRequest) er
 	}
 
 	if orderStatus == "paid" && !wasPaid {
+		event, err := u.eventRepo.FindByID(order.EventID.String())
+		if err != nil {
+			return errors.New("event not found")
+		}
+
+		promoterID := event.PromoterID.String()
+		wallet, err := u.walletRepo.FindByPromoterID(promoterID)
+		if err != nil {
+			wallet = &model.PromotorWallet{
+				PromoterID: event.PromoterID,
+				Balance:    0,
+			}
+			if err := u.walletRepo.Create(wallet); err != nil {
+				return errors.New("failed to create promoter wallet")
+			}
+		}
+
+		commission := order.TotalPrice - order.ServiceFee
+		wallet.Balance += commission
+		if err := u.walletRepo.Update(wallet); err != nil {
+			return errors.New("failed to update wallet balance")
+		}
+
+		desc := fmt.Sprintf("Commission from order %s", order.ID.String())
+		transaction := &model.WalletTransaction{
+			WalletID:    wallet.ID,
+			Type:        "TICKET_COMMISSION",
+			Direction:   "IN",
+			Amount:      commission,
+			ReferenceID: &order.ID,
+			Description: &desc,
+		}
+		if err := u.transactionRepo.Create(transaction); err != nil {
+			return errors.New("failed to create wallet transaction")
+		}
+
 		return nil
 	}
 
@@ -366,6 +417,15 @@ func isValidMidtransSignature(req *dto.MidtransWebhookRequest, serverKey string)
 func generateTicketCode(orderID uuid.UUID) string {
 	timestamp := time.Now().UnixNano()
 	return fmt.Sprintf("TIX-%s-%d", strings.ToUpper(orderID.String()[0:8]), timestamp)
+}
+
+func generateTicketQRCodeBase64(ticketCode string) (string, error) {
+	pngData, err := qrcode.Encode(ticketCode, qrcode.Medium, 256)
+	if err != nil {
+		return "", err
+	}
+	encoded := base64.StdEncoding.EncodeToString(pngData)
+	return "data:image/png;base64," + encoded, nil
 }
 
 func derefString(value *string) string {

@@ -64,6 +64,10 @@ func (u *ticketUsecase) GetMyTicketDetail(userID, ticketID string) (*dto.MyTicke
 		return nil, errors.New("unauthorized")
 	}
 
+	if ticket.Order.Status != "paid" {
+		return nil, errors.New("ticket not found")
+	}
+
 	response := &dto.MyTicketDetailResponse{
 		ID:             ticket.ID,
 		TicketCode:     ticket.TicketCode,

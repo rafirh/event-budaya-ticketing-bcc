@@ -50,9 +50,12 @@ func main() {
 	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
 	categoryRepo := gormRepo.NewEventCategoryRepository(config.DB)
 	eventRepo := gormRepo.NewEventRepository(config.DB)
+	eventCommentRepo := gormRepo.NewEventCommentRepository(config.DB)
 	orderRepo := gormRepo.NewOrderRepository(config.DB)
 	ticketRepo := gormRepo.NewTicketRepository(config.DB)
 	paymentRepo := gormRepo.NewPaymentRepository(config.DB)
+	walletRepo := gormRepo.NewPromoterWalletRepository(config.DB)
+	transactionRepo := gormRepo.NewWalletTransactionRepository(config.DB)
 	midtransClient := payment.NewMidtransClient(config.AppConfig.MidtransServer, config.AppConfig.MidtransEnv)
 
 	var uploader storage.Uploader
@@ -74,20 +77,24 @@ func main() {
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo)
-	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, midtransClient, config.AppConfig.MidtransServer)
+	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)
+	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, midtransClient, config.AppConfig.MidtransServer)
 	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)
+	walletUsecase := usecase.NewWalletUsecase(walletRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
 	eventHandler := handler.NewEventHandler(eventUsecase)
+	eventCommentHandler := handler.NewEventCommentHandler(eventCommentUsecase)
 	orderHandler := handler.NewOrderHandler(orderUsecase)
 	ticketHandler := handler.NewTicketHandler(ticketUsecase)
+	walletHandler := handler.NewWalletHandler(walletUsecase)
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
 		ErrorHandler: customErrorHandler,
 	})
 
-	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, orderHandler, ticketHandler, tokenRepo)
+	router.SetupRoutes(app, authHandler, categoryHandler, eventHandler, orderHandler, ticketHandler, eventCommentHandler, walletHandler, tokenRepo)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)

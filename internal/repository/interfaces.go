@@ -34,6 +34,12 @@ type EventRepository interface {
 	Update(event *model.Event) error
 }
 
+type EventCommentRepository interface {
+	Create(comment *model.EventComment) error
+	FindByID(id string) (*model.EventComment, error)
+	FindByEventID(eventID string) ([]model.EventComment, error)
+}
+
 type OrderRepository interface {
 	Create(order *model.Order) error
 	FindByID(id string) (*model.Order, error)
@@ -53,4 +59,15 @@ type PaymentRepository interface {
 	Create(payment *model.Payment) error
 	FindByOrderID(orderID string) (*model.Payment, error)
 	Update(payment *model.Payment) error
+}
+
+type PromoterWalletRepository interface {
+	Create(wallet *model.PromotorWallet) error
+	FindByPromoterID(promoterID string) (*model.PromotorWallet, error)
+	Update(wallet *model.PromotorWallet) error
+}
+
+type WalletTransactionRepository interface {
+	Create(transaction *model.WalletTransaction) error
+	FindByWalletID(walletID string) ([]model.WalletTransaction, error)
 }
