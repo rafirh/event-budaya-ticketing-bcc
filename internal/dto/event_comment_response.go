@@ -9,8 +9,8 @@ import (
 )
 
 type EventCommentUserSummary struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
 	ProfilePhoto *string   `json:"profile_photo"`
 }
 
