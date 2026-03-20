@@ -203,8 +203,11 @@ CREATE TABLE wallet_transactions (
     wallet_id UUID NOT NULL
         REFERENCES promoter_wallets(id) ON DELETE CASCADE,
 
-    type VARCHAR(20)
-        CHECK (type IN ('credit','debit')),
+    type VARCHAR(50) NOT NULL
+        CHECK (type IN ('TICKET_COMMISSION','WITHDRAW')),
+
+    direction VARCHAR(10) NOT NULL
+        CHECK (direction IN ('IN','OUT')),
 
     amount NUMERIC(12,2) NOT NULL,
 

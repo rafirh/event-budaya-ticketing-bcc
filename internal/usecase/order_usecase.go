@@ -28,13 +28,15 @@ type OrderUsecase interface {
 }
 
 type orderUsecase struct {
-	userRepo       repository.UserRepository
-	eventRepo      repository.EventRepository
-	orderRepo      repository.OrderRepository
-	ticketRepo     repository.TicketRepository
-	paymentRepo    repository.PaymentRepository
-	midtransClient *payment.Client
-	midtransServer string
+	userRepo        repository.UserRepository
+	eventRepo       repository.EventRepository
+	orderRepo       repository.OrderRepository
+	ticketRepo      repository.TicketRepository
+	paymentRepo     repository.PaymentRepository
+	walletRepo      repository.PromoterWalletRepository
+	transactionRepo repository.WalletTransactionRepository
+	midtransClient  *payment.Client
+	midtransServer  string
 }
 
 func NewOrderUsecase(
@@ -43,17 +45,21 @@ func NewOrderUsecase(
 	orderRepo repository.OrderRepository,
 	ticketRepo repository.TicketRepository,
 	paymentRepo repository.PaymentRepository,
+	walletRepo repository.PromoterWalletRepository,
+	transactionRepo repository.WalletTransactionRepository,
 	midtransClient *payment.Client,
 	midtransServer string,
 ) OrderUsecase {
 	return &orderUsecase{
-		userRepo:       userRepo,
-		eventRepo:      eventRepo,
-		orderRepo:      orderRepo,
-		ticketRepo:     ticketRepo,
-		paymentRepo:    paymentRepo,
-		midtransClient: midtransClient,
-		midtransServer: midtransServer,
+		userRepo:        userRepo,
+		eventRepo:       eventRepo,
+		orderRepo:       orderRepo,
+		ticketRepo:      ticketRepo,
+		paymentRepo:     paymentRepo,
+		walletRepo:      walletRepo,
+		transactionRepo: transactionRepo,
+		midtransClient:  midtransClient,
+		midtransServer:  midtransServer,
 	}
 }
 
@@ -240,6 +246,42 @@ func (u *orderUsecase) HandleMidtransWebhook(req *dto.MidtransWebhookRequest) er
 	}
 
 	if orderStatus == "paid" && !wasPaid {
+		event, err := u.eventRepo.FindByID(order.EventID.String())
+		if err != nil {
+			return errors.New("event not found")
+		}
+
+		promoterID := event.PromoterID.String()
+		wallet, err := u.walletRepo.FindByPromoterID(promoterID)
+		if err != nil {
+			wallet = &model.PromotorWallet{
+				PromoterID: event.PromoterID,
+				Balance:    0,
+			}
+			if err := u.walletRepo.Create(wallet); err != nil {
+				return errors.New("failed to create promoter wallet")
+			}
+		}
+
+		commission := order.TotalPrice - order.ServiceFee
+		wallet.Balance += commission
+		if err := u.walletRepo.Update(wallet); err != nil {
+			return errors.New("failed to update wallet balance")
+		}
+
+		desc := fmt.Sprintf("Commission from order %s", order.ID.String())
+		transaction := &model.WalletTransaction{
+			WalletID:    wallet.ID,
+			Type:        "TICKET_COMMISSION",
+			Direction:   "IN",
+			Amount:      commission,
+			ReferenceID: &order.ID,
+			Description: &desc,
+		}
+		if err := u.transactionRepo.Create(transaction); err != nil {
+			return errors.New("failed to create wallet transaction")
+		}
+
 		return nil
 	}
 

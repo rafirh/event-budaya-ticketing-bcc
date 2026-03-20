@@ -60,3 +60,14 @@ type PaymentRepository interface {
 	FindByOrderID(orderID string) (*model.Payment, error)
 	Update(payment *model.Payment) error
 }
+
+type PromoterWalletRepository interface {
+	Create(wallet *model.PromotorWallet) error
+	FindByPromoterID(promoterID string) (*model.PromotorWallet, error)
+	Update(wallet *model.PromotorWallet) error
+}
+
+type WalletTransactionRepository interface {
+	Create(transaction *model.WalletTransaction) error
+	FindByWalletID(walletID string) ([]model.WalletTransaction, error)
+}

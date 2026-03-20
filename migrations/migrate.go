@@ -26,6 +26,8 @@ func Migrate(db *gorm.DB) {
 		&model.Order{},
 		&model.Ticket{},
 		&model.Payment{},
+		&model.PromotorWallet{},
+		&model.WalletTransaction{},
 	)
 
 	if err != nil {
@@ -45,7 +47,7 @@ func Seed(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.PersonalAccessToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
+	db.Migrator().DropTable(&model.WalletTransaction{}, &model.PromotorWallet{}, &model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.PersonalAccessToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
 }
