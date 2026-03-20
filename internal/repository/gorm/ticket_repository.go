@@ -45,6 +45,7 @@ func (r *ticketRepository) FindByUserID(userID string) ([]model.Ticket, error) {
 	err := r.db.Preload("Order.Event").
 		Joins("JOIN orders ON tickets.order_id = orders.id").
 		Where("orders.user_id = ?", userID).
+		Where("orders.status = ?", "paid").
 		Order("tickets.created_at DESC").
 		Find(&tickets).Error
 	if err != nil {
