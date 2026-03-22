@@ -14,6 +14,10 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+type ResendVerificationEmailRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
 type UpdateProfileRequest struct {
 	Name   *string `json:"name" validate:"omitempty,min=2,max=150"`
 	Phone  *string `json:"phone" validate:"omitempty,max=20"`

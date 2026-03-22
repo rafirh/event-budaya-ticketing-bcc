@@ -31,6 +31,16 @@ func (r *emailVerificationTokenRepository) FindByTokenHash(tokenHash string) (*m
 	return &token, nil
 }
 
+func (r *emailVerificationTokenRepository) FindLatestByUserID(userID uuid.UUID) (*model.EmailVerificationToken, error) {
+	var token model.EmailVerificationToken
+	err := r.db.Where("user_id = ?", userID).Order("created_at DESC").First(&token).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
+
 func (r *emailVerificationTokenRepository) DeleteByUserID(userID uuid.UUID) error {
 	return r.db.Where("user_id = ?", userID).Delete(&model.EmailVerificationToken{}).Error
 }

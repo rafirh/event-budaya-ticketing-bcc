@@ -26,6 +26,7 @@ type AuthUsecase interface {
 	Register(req *dto.RegisterRequest) (*dto.UserResponse, error)
 	Login(req *dto.LoginRequest) (*dto.LoginResponse, error)
 	VerifyEmail(token string) error
+	ResendVerificationEmail(email string) error
 	GetMe(id string) (*dto.UserResponse, error)
 	UpdateProfile(userID string, req *dto.UpdateProfileRequest, photo *multipart.FileHeader) (*dto.UserResponse, error)
 	Logout(token string) error
@@ -100,6 +101,35 @@ func (u *authUsecase) sendVerificationEmail(toName, toEmail, verificationLink st
 	return nil
 }
 
+func (u *authUsecase) createAndSendVerificationToken(user *model.User) error {
+	rawToken, err := generateToken()
+	if err != nil {
+		return errors.New("failed to create verification token")
+	}
+
+	if err := u.emailVerificationRepo.DeleteByUserID(user.ID); err != nil {
+		return errors.New("failed to create verification token")
+	}
+
+	verificationToken := &model.EmailVerificationToken{
+		UserID:    user.ID,
+		TokenHash: hashToken(rawToken),
+		ExpiresAt: time.Now().Add(15 * time.Minute),
+	}
+
+	if err := u.emailVerificationRepo.Create(verificationToken); err != nil {
+		return errors.New("failed to create verification token")
+	}
+
+	verificationLink := u.buildVerificationLink(rawToken)
+	if err := u.sendVerificationEmail(user.Name, user.Email, verificationLink); err != nil {
+		_ = u.emailVerificationRepo.DeleteByUserID(user.ID)
+		return err
+	}
+
+	return nil
+}
+
 func (u *authUsecase) Register(req *dto.RegisterRequest) (*dto.UserResponse, error) {
 	existing, err := u.userRepo.FindByEmail(req.Email)
 	if err == nil && existing != nil {
@@ -143,31 +173,7 @@ func (u *authUsecase) Register(req *dto.RegisterRequest) (*dto.UserResponse, err
 		return nil, errors.New("failed to create user")
 	}
 
-	rawToken, err := generateToken()
-	if err != nil {
-		_ = u.userRepo.DeleteByID(user.ID.String())
-		return nil, errors.New("failed to create verification token")
-	}
-
-	if err := u.emailVerificationRepo.DeleteByUserID(user.ID); err != nil {
-		_ = u.userRepo.DeleteByID(user.ID.String())
-		return nil, errors.New("failed to create verification token")
-	}
-
-	verificationToken := &model.EmailVerificationToken{
-		UserID:    user.ID,
-		TokenHash: hashToken(rawToken),
-		ExpiresAt: time.Now().Add(15 * time.Minute),
-	}
-
-	if err := u.emailVerificationRepo.Create(verificationToken); err != nil {
-		_ = u.userRepo.DeleteByID(user.ID.String())
-		return nil, errors.New("failed to create verification token")
-	}
-
-	verificationLink := u.buildVerificationLink(rawToken)
-	if err := u.sendVerificationEmail(user.Name, user.Email, verificationLink); err != nil {
-		_ = u.emailVerificationRepo.DeleteByUserID(user.ID)
+	if err := u.createAndSendVerificationToken(user); err != nil {
 		_ = u.userRepo.DeleteByID(user.ID.String())
 		return nil, err
 	}
@@ -251,6 +257,37 @@ func (u *authUsecase) VerifyEmail(token string) error {
 
 	if err := u.emailVerificationRepo.DeleteByUserID(user.ID); err != nil {
 		return errors.New("failed to finalize email verification")
+	}
+
+	return nil
+}
+
+func (u *authUsecase) ResendVerificationEmail(email string) error {
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return errors.New("email is required")
+	}
+
+	user, err := u.userRepo.FindByEmail(email)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if user.EmailVerifiedAt != nil {
+		return errors.New("account is already verified")
+	}
+
+	latestToken, err := u.emailVerificationRepo.FindLatestByUserID(user.ID)
+	if err == nil {
+		if latestToken.UsedAt == nil && time.Now().Before(latestToken.ExpiresAt) {
+			return errors.New("verification link is still active, please use the existing link")
+		}
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New("failed to resend verification email")
+	}
+
+	if err := u.createAndSendVerificationToken(user); err != nil {
+		return err
 	}
 
 	return nil

@@ -68,6 +68,23 @@ func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
 	return response.Success(c, fiber.StatusOK, "Email verified successfully. You can now login.", nil)
 }
 
+func (h *AuthHandler) ResendVerificationEmail(c *fiber.Ctx) error {
+	var req dto.ResendVerificationEmailRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	if errors := validator.ValidateStruct(req); errors != nil {
+		return response.ValidationError(c, errors)
+	}
+
+	if err := h.authUsecase.ResendVerificationEmail(req.Email); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Verification email resent successfully", nil)
+}
+
 func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	userID := c.Locals("userID").(string)
 

@@ -19,6 +19,7 @@ type UserRepository interface {
 type EmailVerificationTokenRepository interface {
 	Create(token *model.EmailVerificationToken) error
 	FindByTokenHash(tokenHash string) (*model.EmailVerificationToken, error)
+	FindLatestByUserID(userID uuid.UUID) (*model.EmailVerificationToken, error)
 	DeleteByUserID(userID uuid.UUID) error
 	MarkUsed(id uint, usedAt time.Time) error
 }
