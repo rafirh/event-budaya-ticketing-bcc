@@ -40,3 +40,7 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 func (r *userRepository) Update(user *model.User) error {
 	return r.db.Save(user).Error
 }
+
+func (r *userRepository) DeleteByID(id string) error {
+	return r.db.Where("id = ?", id).Delete(&model.User{}).Error
+}

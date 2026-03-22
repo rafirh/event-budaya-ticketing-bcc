@@ -20,6 +20,7 @@ func Migrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.User{},
 		&model.PersonalAccessToken{},
+		&model.EmailVerificationToken{},
 		&model.EventCategory{},
 		&model.Event{},
 		&model.EventComment{},
@@ -47,7 +48,7 @@ func Seed(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&model.WalletTransaction{}, &model.PromotorWallet{}, &model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.PersonalAccessToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
+	db.Migrator().DropTable(&model.WalletTransaction{}, &model.PromotorWallet{}, &model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.PersonalAccessToken{}, &model.EmailVerificationToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
 }

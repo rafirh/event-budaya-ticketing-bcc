@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"log"
+	"time"
 
 	"event-budaya-ticketing-bcc/internal/model"
 
@@ -29,11 +30,13 @@ func seedUsers(db *gorm.DB) {
 		}
 
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		now := time.Now()
 		user := model.User{
-			Name:     u.Name,
-			Email:    u.Email,
-			Password: string(hashedPassword),
-			Role:     u.Role,
+			Name:            u.Name,
+			Email:           u.Email,
+			Password:        string(hashedPassword),
+			Role:            u.Role,
+			EmailVerifiedAt: &now,
 		}
 		db.Create(&user)
 		log.Printf("Seeded: %s / %s", u.Email, u.Password)

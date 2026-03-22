@@ -13,6 +13,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/router"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/migrations"
+	"event-budaya-ticketing-bcc/pkg/email"
 	"event-budaya-ticketing-bcc/pkg/payment"
 	"event-budaya-ticketing-bcc/pkg/storage"
 
@@ -48,6 +49,7 @@ func main() {
 
 	userRepo := gormRepo.NewUserRepository(config.DB)
 	tokenRepo := gormRepo.NewPersonalAccessTokenRepository(config.DB)
+	emailVerificationRepo := gormRepo.NewEmailVerificationTokenRepository(config.DB)
 	categoryRepo := gormRepo.NewEventCategoryRepository(config.DB)
 	eventRepo := gormRepo.NewEventRepository(config.DB)
 	eventCommentRepo := gormRepo.NewEventCommentRepository(config.DB)
@@ -59,6 +61,16 @@ func main() {
 	midtransClient := payment.NewMidtransClient(config.AppConfig.MidtransServer, config.AppConfig.MidtransEnv)
 
 	var uploader storage.Uploader
+	mailSender := email.NewSMTPSender(email.SMTPConfig{
+		Host:       config.AppConfig.MailHost,
+		Port:       config.AppConfig.MailPort,
+		Username:   config.AppConfig.MailUsername,
+		Password:   config.AppConfig.MailPassword,
+		Encryption: config.AppConfig.MailEncryption,
+		FromAddr:   config.AppConfig.MailFromAddress,
+		FromName:   config.AppConfig.MailFromName,
+	})
+
 	if config.AppConfig.S3Bucket != "" && config.AppConfig.S3Region != "" {
 		s3Uploader, err := storage.NewS3Uploader(storage.S3Config{
 			Region:        config.AppConfig.S3Region,
@@ -74,7 +86,7 @@ func main() {
 		}
 	}
 
-	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, uploader)
+	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, emailVerificationRepo, mailSender, config.AppConfig.AppURL, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo)
 	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)

@@ -13,6 +13,14 @@ type UserRepository interface {
 	FindByID(id string) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
 	Update(user *model.User) error
+	DeleteByID(id string) error
+}
+
+type EmailVerificationTokenRepository interface {
+	Create(token *model.EmailVerificationToken) error
+	FindByTokenHash(tokenHash string) (*model.EmailVerificationToken, error)
+	DeleteByUserID(userID uuid.UUID) error
+	MarkUsed(id uint, usedAt time.Time) error
 }
 
 type PersonalAccessTokenRepository interface {

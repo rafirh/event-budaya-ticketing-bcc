@@ -12,6 +12,7 @@ func authRoutes(api fiber.Router, authHandler *handler.AuthHandler, tokenRepo re
 	auth := api.Group("/auth")
 
 	auth.Post("/register", authHandler.Register)
+	auth.Get("/verify-email", authHandler.VerifyEmail)
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/logout", middleware.AuthMiddleware(tokenRepo), authHandler.Logout)
 
