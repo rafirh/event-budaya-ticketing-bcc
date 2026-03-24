@@ -15,4 +15,7 @@ func eventRoutes(api fiber.Router, eventHandler *handler.EventHandler, tokenRepo
 
 	promoterEvents := events.Group("", middleware.AuthMiddleware(tokenRepo), middleware.PromoterMiddleware())
 	promoterEvents.Post("/", eventHandler.CreateEvent)
+
+	me := api.Group("/me", middleware.AuthMiddleware(tokenRepo), middleware.PromoterMiddleware())
+	me.Get("/events", eventHandler.GetByPromoterID)
 }

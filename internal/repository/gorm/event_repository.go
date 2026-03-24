@@ -91,25 +91,47 @@ func (r *eventRepository) Create(event *model.Event) error {
 	return r.db.Create(event).Error
 }
 
-func (r *eventRepository) FindByPromoterID(promoterID uuid.UUID, limit, offset int) ([]model.Event, int64, error) {
-	var events []model.Event
-	var total int64
+func (r *eventRepository) FindByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error) {
+	baseQuery := r.db.Model(&model.Event{}).Where("promoter_id = ?", promoterID)
+	orderBy := buildEventOrderBy(sortBy, sortOrder)
 
-	if err := r.db.Model(&model.Event{}).
-		Where("promoter_id = ?", promoterID).
-		Count(&total).Error; err != nil {
+	if search != "" {
+		searchKeyword := "%" + search + "%"
+		baseQuery = baseQuery.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)
+	}
+
+	if categoryID != "" {
+		baseQuery = baseQuery.Where("category_id = ?", categoryID)
+	}
+
+	var total int64
+	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
+	var events []model.Event
 	err := r.db.
 		Preload("Category").
-		Where("promoter_id = ?", promoterID).
-		Order("created_at DESC").
+		Preload("PaymentInfo").
+		Scopes(func(db *gorm.DB) *gorm.DB {
+			query := db.Where("promoter_id = ?", promoterID)
+			if search != "" {
+				searchKeyword := "%" + search + "%"
+				query = query.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)
+			}
+			if categoryID != "" {
+				query = query.Where("category_id = ?", categoryID)
+			}
+			return query
+		}).
+		Order(orderBy).
 		Limit(limit).
 		Offset(offset).
 		Find(&events).Error
-
-	return events, total, err
+	if err != nil {
+		return nil, 0, err
+	}
+	return events, total, nil
 }
 
 func (r *eventRepository) Update(event *model.Event) error {
