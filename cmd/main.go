@@ -53,11 +53,15 @@ func main() {
 	categoryRepo := gormRepo.NewEventCategoryRepository(config.DB)
 	eventRepo := gormRepo.NewEventRepository(config.DB)
 	eventCommentRepo := gormRepo.NewEventCommentRepository(config.DB)
+	eventCreationPaymentRepo := gormRepo.NewEventCreationPaymentRepository(config.DB)
 	orderRepo := gormRepo.NewOrderRepository(config.DB)
 	ticketRepo := gormRepo.NewTicketRepository(config.DB)
 	paymentRepo := gormRepo.NewPaymentRepository(config.DB)
 	walletRepo := gormRepo.NewPromoterWalletRepository(config.DB)
 	transactionRepo := gormRepo.NewWalletTransactionRepository(config.DB)
+	feeRepo := gormRepo.NewFeeRepository(config.DB)
+	adminWalletRepo := gormRepo.NewAdminWalletRepository(config.DB)
+	promoterTransactionRepo := gormRepo.NewPromoterTransactionHistoryRepository(config.DB)
 	midtransClient := payment.NewMidtransClient(config.AppConfig.MidtransServer, config.AppConfig.MidtransEnv)
 
 	var uploader storage.Uploader
@@ -88,7 +92,7 @@ func main() {
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, emailVerificationRepo, mailSender, config.AppConfig.AppURL, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
-	eventUsecase := usecase.NewEventUsecase(eventRepo)
+	eventUsecase := usecase.NewEventUsecase(eventRepo, eventCreationPaymentRepo, feeRepo, adminWalletRepo, promoterTransactionRepo, midtransClient)
 	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)
 	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, midtransClient, config.AppConfig.MidtransServer)
 	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)

@@ -6,6 +6,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -84,6 +85,31 @@ func (r *eventRepository) FindByID(id string) (*model.Event, error) {
 		return nil, err
 	}
 	return &event, nil
+}
+
+func (r *eventRepository) Create(event *model.Event) error {
+	return r.db.Create(event).Error
+}
+
+func (r *eventRepository) FindByPromoterID(promoterID uuid.UUID, limit, offset int) ([]model.Event, int64, error) {
+	var events []model.Event
+	var total int64
+
+	if err := r.db.Model(&model.Event{}).
+		Where("promoter_id = ?", promoterID).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := r.db.
+		Preload("Category").
+		Where("promoter_id = ?", promoterID).
+		Order("created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&events).Error
+
+	return events, total, err
 }
 
 func (r *eventRepository) Update(event *model.Event) error {

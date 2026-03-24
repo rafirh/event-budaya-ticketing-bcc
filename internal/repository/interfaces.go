@@ -37,9 +37,11 @@ type EventCategoryRepository interface {
 }
 
 type EventRepository interface {
+	Create(event *model.Event) error
 	FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error)
 	FindByID(id string) (*model.Event, error)
 	FindBySlug(slug string) (*model.Event, error)
+	FindByPromoterID(promoterID uuid.UUID, limit, offset int) ([]model.Event, int64, error)
 	Update(event *model.Event) error
 }
 
@@ -79,4 +81,27 @@ type PromoterWalletRepository interface {
 type WalletTransactionRepository interface {
 	Create(transaction *model.WalletTransaction) error
 	FindByWalletID(walletID string) ([]model.WalletTransaction, error)
+}
+
+type FeeRepository interface {
+	FindByType(feeType string) (*model.Fee, error)
+	FindAll() ([]model.Fee, error)
+}
+
+type AdminWalletRepository interface {
+	FindOrCreate() (*model.AdminWallet, error)
+	Update(wallet *model.AdminWallet) error
+	FindByID(id string) (*model.AdminWallet, error)
+}
+
+type PromoterTransactionHistoryRepository interface {
+	Create(transaction *model.PromoterTransactionHistory) error
+	FindByPromoterID(promoterID uuid.UUID, limit, offset int) ([]model.PromoterTransactionHistory, int64, error)
+}
+
+type EventCreationPaymentRepository interface {
+	Create(payment *model.EventCreationPayment) error
+	FindByOrderID(orderID string) (*model.EventCreationPayment, error)
+	FindByEventID(eventID uuid.UUID) (*model.EventCreationPayment, error)
+	Update(payment *model.EventCreationPayment) error
 }

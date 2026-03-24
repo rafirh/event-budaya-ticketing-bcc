@@ -32,6 +32,7 @@ func Migrate(db *gorm.DB) {
 		&model.PromotorWallet{},
 		&model.WalletTransaction{},
 		&model.PromoterTransactionHistory{},
+		&model.EventCreationPayment{},
 	)
 
 	if err != nil {

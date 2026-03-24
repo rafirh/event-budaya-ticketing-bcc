@@ -136,8 +136,14 @@ CREATE TABLE orders (
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    order_id UUID UNIQUE
+    payment_type VARCHAR(50) NOT NULL DEFAULT 'ORDER'
+        CHECK (payment_type IN ('ORDER', 'EVENT_POSTING_FEE')),
+
+    order_id UUID
         REFERENCES orders(id) ON DELETE CASCADE,
+
+    event_id UUID
+        REFERENCES events(id) ON DELETE CASCADE,
 
     payment_method VARCHAR(50),
     payment_gateway VARCHAR(50),
@@ -151,6 +157,10 @@ CREATE TABLE payments (
     paid_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX idx_payments_order ON payments(order_id);
+CREATE INDEX idx_payments_event ON payments(event_id);
+CREATE INDEX idx_payments_type ON payments(payment_type);
 
 
 -- =====================================================
