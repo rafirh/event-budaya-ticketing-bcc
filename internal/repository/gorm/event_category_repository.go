@@ -6,6 +6,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -39,6 +40,15 @@ func (r *eventCategoryRepository) FindAll(limit, offset int, sortBy, sortOrder s
 		return nil, 0, err
 	}
 	return categories, total, nil
+}
+
+func (r *eventCategoryRepository) FindByID(id uuid.UUID) (*model.EventCategory, error) {
+	var category model.EventCategory
+	err := r.db.Where("id = ?", id).First(&category).Error
+	if err != nil {
+		return nil, err
+	}
+	return &category, nil
 }
 
 func buildCategoryOrderBy(sortBy, sortOrder string) string {

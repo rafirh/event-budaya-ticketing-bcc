@@ -119,7 +119,16 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 
 	result, err := h.eventUsecase.CreateEvent(req, promoterID)
 	if err != nil {
-		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		switch err.Error() {
+		case "category not found":
+			return response.Error(c, fiber.StatusBadRequest, "Category not found")
+		case "title is required":
+			return response.Error(c, fiber.StatusBadRequest, "Title is required")
+		case "quota must be greater than 0":
+			return response.Error(c, fiber.StatusBadRequest, "Quota must be greater than 0")
+		default:
+			return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return response.Success(c, fiber.StatusCreated, "Event created successfully, please complete payment", result)

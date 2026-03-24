@@ -92,7 +92,7 @@ func main() {
 
 	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, emailVerificationRepo, mailSender, config.AppConfig.AppURL, uploader)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
-	eventUsecase := usecase.NewEventUsecase(eventRepo, eventCreationPaymentRepo, feeRepo, adminWalletRepo, promoterTransactionRepo, midtransClient)
+	eventUsecase := usecase.NewEventUsecase(eventRepo, eventCreationPaymentRepo, categoryRepo, feeRepo, adminWalletRepo, promoterTransactionRepo, midtransClient)
 	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)
 	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, eventUsecase, midtransClient, config.AppConfig.MidtransServer)
 	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)

@@ -34,6 +34,7 @@ type PersonalAccessTokenRepository interface {
 
 type EventCategoryRepository interface {
 	FindAll(limit, offset int, sortBy, sortOrder string) ([]model.EventCategory, int64, error)
+	FindByID(id uuid.UUID) (*model.EventCategory, error)
 }
 
 type EventRepository interface {

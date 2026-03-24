@@ -24,6 +24,7 @@ type EventUsecase interface {
 type eventUsecase struct {
 	eventRepo                repository.EventRepository
 	eventCreationPaymentRepo repository.EventCreationPaymentRepository
+	categoryRepo             repository.EventCategoryRepository
 	feeRepo                  repository.FeeRepository
 	adminWalletRepo          repository.AdminWalletRepository
 	promoterTransactionRepo  repository.PromoterTransactionHistoryRepository
@@ -33,6 +34,7 @@ type eventUsecase struct {
 func NewEventUsecase(
 	eventRepo repository.EventRepository,
 	eventCreationPaymentRepo repository.EventCreationPaymentRepository,
+	categoryRepo repository.EventCategoryRepository,
 	feeRepo repository.FeeRepository,
 	adminWalletRepo repository.AdminWalletRepository,
 	promoterTransactionRepo repository.PromoterTransactionHistoryRepository,
@@ -41,6 +43,7 @@ func NewEventUsecase(
 	return &eventUsecase{
 		eventRepo:                eventRepo,
 		eventCreationPaymentRepo: eventCreationPaymentRepo,
+		categoryRepo:             categoryRepo,
 		feeRepo:                  feeRepo,
 		adminWalletRepo:          adminWalletRepo,
 		promoterTransactionRepo:  promoterTransactionRepo,
@@ -84,6 +87,14 @@ func (u *eventUsecase) CreateEvent(req dto.CreateEventRequest, promoterID uuid.U
 	}
 	if req.Quota <= 0 {
 		return nil, errors.New("quota must be greater than 0")
+	}
+
+	// Validate category if provided
+	if req.CategoryID != nil {
+		_, err := u.categoryRepo.FindByID(*req.CategoryID)
+		if err != nil {
+			return nil, errors.New("category not found")
+		}
 	}
 
 	fee, err := u.feeRepo.FindByType("EVENT_POSTING_FEE")
@@ -175,7 +186,7 @@ func (u *eventUsecase) HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest
 		paymentStatus = "settlement"
 	} else if req.TransactionStatus == "pending" {
 		paymentStatus = "pending"
-		return nil 
+		return nil
 	} else if req.TransactionStatus == "expire" || req.TransactionStatus == "cancel" {
 		paymentStatus = "cancelled"
 	}
