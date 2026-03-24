@@ -1,6 +1,14 @@
 package helper
 
-import "strings"
+import (
+	"math/rand"
+	"strings"
+	"time"
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func MakeSlug(value string) string {
 	value = strings.ToLower(strings.TrimSpace(value))
@@ -12,5 +20,17 @@ func MakeSlug(value string) string {
 		":", "",
 	)
 
-	return replacer.Replace(value)
+	slug := replacer.Replace(value)
+	randomStr := generateRandomString(8)
+
+	return slug + "-" + randomStr
+}
+
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(result)
 }
