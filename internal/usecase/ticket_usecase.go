@@ -12,6 +12,7 @@ import (
 type TicketUsecase interface {
 	GetMyTickets(userID string) ([]dto.MyTicketListResponse, error)
 	GetMyTicketDetail(userID, ticketID string) (*dto.MyTicketDetailResponse, error)
+	GetAttendeesByEventID(eventID string, search string, page, limit int) ([]dto.AttendeeResponse, int64, error)
 }
 
 type ticketUsecase struct {
@@ -88,4 +89,20 @@ func (u *ticketUsecase) GetMyTicketDetail(userID, ticketID string) (*dto.MyTicke
 	response.Order.OrderStatus = ticket.Order.Status
 
 	return response, nil
+}
+
+func (u *ticketUsecase) GetAttendeesByEventID(eventID string, search string, page, limit int) ([]dto.AttendeeResponse, int64, error) {
+	offset := (page - 1) * limit
+
+	tickets, total, err := u.ticketRepo.FindByEventID(eventID, search, limit, offset)
+	if err != nil {
+		return nil, 0, errors.New("failed to fetch attendees")
+	}
+
+	responses := make([]dto.AttendeeResponse, 0, len(tickets))
+	for _, ticket := range tickets {
+		responses = append(responses, dto.ToAttendeeResponse(ticket))
+	}
+
+	return responses, total, nil
 }

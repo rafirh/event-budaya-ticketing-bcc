@@ -102,7 +102,7 @@ func main() {
 	eventHandler := handler.NewEventHandler(eventUsecase)
 	eventCommentHandler := handler.NewEventCommentHandler(eventCommentUsecase)
 	orderHandler := handler.NewOrderHandler(orderUsecase)
-	ticketHandler := handler.NewTicketHandler(ticketUsecase)
+	ticketHandler := handler.NewTicketHandler(ticketUsecase, eventRepo)
 	walletHandler := handler.NewWalletHandler(walletUsecase)
 
 	app := fiber.New(fiber.Config{

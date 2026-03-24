@@ -53,3 +53,38 @@ func (r *ticketRepository) FindByUserID(userID string) ([]model.Ticket, error) {
 	}
 	return tickets, nil
 }
+
+func (r *ticketRepository) FindByEventID(eventID string, search string, limit, offset int) ([]model.Ticket, int64, error) {
+	baseQuery := r.db.
+		Joins("JOIN orders ON tickets.order_id = orders.id").
+		Where("orders.event_id = ?", eventID).
+		Where("orders.status = ?", "paid")
+
+	if search != "" {
+		searchKeyword := "%" + search + "%"
+		baseQuery = baseQuery.Where(
+			r.db.Where("tickets.holder_name ILIKE ?", searchKeyword).
+				Or("tickets.holder_email ILIKE ?", searchKeyword).
+				Or("tickets.holder_phone ILIKE ?", searchKeyword).
+				Or("tickets.identity_number ILIKE ?", searchKeyword),
+		)
+	}
+
+	var total int64
+	if err := baseQuery.Model(&model.Ticket{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var tickets []model.Ticket
+	err := baseQuery.
+		Select("tickets.*").
+		Order("tickets.created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&tickets).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+	return tickets, total, nil
+}
