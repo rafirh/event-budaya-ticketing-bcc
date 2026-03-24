@@ -11,6 +11,7 @@ type PromotorWallet struct {
 	PromoterID uuid.UUID `gorm:"type:uuid;uniqueIndex;not null" json:"promoter_id"`
 	Balance    float64   `gorm:"type:numeric(14,2);default:0" json:"balance"`
 	CreatedAt  time.Time `json:"created_at"`
+	Promoter   User      `gorm:"foreignKey:PromoterID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (PromotorWallet) TableName() string {
@@ -26,7 +27,7 @@ type WalletTransaction struct {
 	ReferenceID *uuid.UUID     `gorm:"type:uuid" json:"reference_id"`
 	Description *string        `json:"description"`
 	CreatedAt   time.Time      `json:"created_at"`
-	Wallet      PromotorWallet `gorm:"foreignKey:WalletID" json:"-"`
+	Wallet      PromotorWallet `gorm:"foreignKey:WalletID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
 
 func (WalletTransaction) TableName() string {

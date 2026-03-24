@@ -20,7 +20,7 @@ type PromoterTransactionHistory struct {
 	Notes           *string    `json:"notes"`
 	CreatedAt       time.Time  `json:"created_at"`
 
-	Promoter User `gorm:"foreignKey:PromoterID;references:ID" json:"-"`
+	Promoter User `gorm:"foreignKey:PromoterID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (PromoterTransactionHistory) TableName() string {

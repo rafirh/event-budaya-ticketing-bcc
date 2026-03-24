@@ -22,8 +22,8 @@ type EventCreationPayment struct {
 	CreatedAt        time.Time  `json:"created_at"`
 	UpdatedAt        *time.Time `json:"updated_at"`
 
-	Event    Event `gorm:"foreignKey:EventID" json:"-"`
-	Promoter User  `gorm:"foreignKey:PromoterID" json:"-"`
+	Event    Event `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Promoter User  `gorm:"foreignKey:PromoterID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (EventCreationPayment) TableName() string {

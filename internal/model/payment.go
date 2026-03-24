@@ -16,7 +16,7 @@ type Payment struct {
 	Status         string     `gorm:"size:20" json:"status"`
 	PaidAt         *time.Time `json:"paid_at"`
 	CreatedAt      time.Time  `json:"created_at"`
-	Order          Order      `gorm:"foreignKey:OrderID" json:"-"`
+	Order          Order      `gorm:"foreignKey:OrderID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (Payment) TableName() string {

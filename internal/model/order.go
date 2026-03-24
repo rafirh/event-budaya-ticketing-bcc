@@ -17,8 +17,8 @@ type Order struct {
 	Status     string     `gorm:"size:20;default:pending" json:"status"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  *time.Time `json:"updated_at"`
-	User       User       `gorm:"foreignKey:UserID" json:"-"`
-	Event      Event      `gorm:"foreignKey:EventID" json:"-"`
+	User       User       `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+	Event      Event      `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (Order) TableName() string {

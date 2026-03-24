@@ -14,10 +14,10 @@ type EventComment struct {
 	Comment   string         `gorm:"type:text;not null" json:"comment"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt *time.Time     `json:"updated_at"`
-	Event     Event          `gorm:"foreignKey:EventID" json:"-"`
-	User      User           `gorm:"foreignKey:UserID" json:"-"`
-	Parent    *EventComment  `gorm:"foreignKey:ParentID" json:"-"`
-	Replies   []EventComment `gorm:"foreignKey:ParentID" json:"-"`
+	Event     Event          `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	User      User           `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+	Parent    *EventComment  `gorm:"foreignKey:ParentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Replies   []EventComment `gorm:"foreignKey:ParentID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
 
 func (EventComment) TableName() string {
