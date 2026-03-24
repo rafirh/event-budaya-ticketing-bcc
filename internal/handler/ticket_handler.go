@@ -4,9 +4,11 @@ import (
 	"math"
 	"strconv"
 
+	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/repository"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/pkg/response"
+	"event-budaya-ticketing-bcc/pkg/validator"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -123,4 +125,54 @@ func (h *TicketHandler) GetAttendeesByEventID(c *fiber.Ctx) error {
 		Total:       total,
 		TotalPages:  totalPages,
 	})
+}
+
+func (h *TicketHandler) CheckInTicket(c *fiber.Ctx) error {
+	userID := c.Locals("userID")
+	if userID == nil {
+		return response.Error(c, fiber.StatusUnauthorized, "User ID not found in context")
+	}
+
+	promoterID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid user ID")
+	}
+
+	eventID := c.Params("eventId")
+	if eventID == "" {
+		return response.Error(c, fiber.StatusBadRequest, "Event ID is required")
+	}
+
+	// Verify event ownership
+	event, err := h.eventRepository.FindByID(eventID)
+	if err != nil {
+		return response.Error(c, fiber.StatusNotFound, "Event not found")
+	}
+
+	if event.PromoterID != promoterID {
+		return response.Error(c, fiber.StatusForbidden, "You don't have permission to check in for this event")
+	}
+
+	var req dto.CheckInRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	if err := validator.ValidateStruct(req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Validation error: "+err[0].Message)
+	}
+
+	result, err := h.ticketUsecase.CheckInTicket(eventID, req.TicketCode)
+	if err != nil {
+		switch err.Error() {
+		case "ticket not found":
+			return response.Error(c, fiber.StatusNotFound, "Ticket not found")
+		case "ticket already checked in":
+			return response.Error(c, fiber.StatusBadRequest, "Ticket already checked in")
+		default:
+			return response.Error(c, fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return response.Success(c, fiber.StatusOK, "Check-in successful", result)
 }

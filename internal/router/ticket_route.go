@@ -15,4 +15,7 @@ func ticketRoutes(api fiber.Router, ticketHandler *handler.TicketHandler, tokenR
 
 	promoterTickets := api.Group("/events/:eventId/attendees", middleware.AuthMiddleware(tokenRepo), middleware.PromoterMiddleware())
 	promoterTickets.Get("", ticketHandler.GetAttendeesByEventID)
+
+	checkIn := api.Group("/events/:eventId/check-in", middleware.AuthMiddleware(tokenRepo), middleware.PromoterMiddleware())
+	checkIn.Post("", ticketHandler.CheckInTicket)
 }

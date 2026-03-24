@@ -88,3 +88,33 @@ func (r *ticketRepository) FindByEventID(eventID string, search string, limit, o
 	}
 	return tickets, total, nil
 }
+
+func (r *ticketRepository) FindByIDAndEventID(ticketID, eventID string) (*model.Ticket, error) {
+	var ticket model.Ticket
+	err := r.db.
+		Joins("JOIN orders ON tickets.order_id = orders.id").
+		Where("tickets.id = ?", ticketID).
+		Where("orders.event_id = ?", eventID).
+		First(&ticket).Error
+	if err != nil {
+		return nil, err
+	}
+	return &ticket, nil
+}
+
+func (r *ticketRepository) FindByCodeAndEventID(ticketCode, eventID string) (*model.Ticket, error) {
+	var ticket model.Ticket
+	err := r.db.
+		Joins("JOIN orders ON tickets.order_id = orders.id").
+		Where("tickets.ticket_code = ?", ticketCode).
+		Where("orders.event_id = ?", eventID).
+		First(&ticket).Error
+	if err != nil {
+		return nil, err
+	}
+	return &ticket, nil
+}
+
+func (r *ticketRepository) Update(ticket *model.Ticket) error {
+	return r.db.Save(ticket).Error
+}

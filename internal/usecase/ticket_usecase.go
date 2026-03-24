@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"time"
 
 	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/repository"
@@ -13,6 +14,7 @@ type TicketUsecase interface {
 	GetMyTickets(userID string) ([]dto.MyTicketListResponse, error)
 	GetMyTicketDetail(userID, ticketID string) (*dto.MyTicketDetailResponse, error)
 	GetAttendeesByEventID(eventID string, search string, page, limit int) ([]dto.AttendeeResponse, int64, error)
+	CheckInTicket(eventID, ticketCode string) (*dto.CheckInResponse, error)
 }
 
 type ticketUsecase struct {
@@ -105,4 +107,31 @@ func (u *ticketUsecase) GetAttendeesByEventID(eventID string, search string, pag
 	}
 
 	return responses, total, nil
+}
+
+func (u *ticketUsecase) CheckInTicket(eventID, ticketCode string) (*dto.CheckInResponse, error) {
+	ticket, err := u.ticketRepo.FindByCodeAndEventID(ticketCode, eventID)
+	if err != nil {
+		return nil, errors.New("ticket not found")
+	}
+
+	if ticket.IsUsed {
+		return nil, errors.New("ticket already checked in")
+	}
+
+	now := time.Now()
+	ticket.IsUsed = true
+	ticket.UsedAt = &now
+
+	if err := u.ticketRepo.Update(ticket); err != nil {
+		return nil, errors.New("failed to check in ticket")
+	}
+
+	usedAtStr := now.Format(time.RFC3339)
+	return &dto.CheckInResponse{
+		TicketCode: ticket.TicketCode,
+		HolderName: ticket.HolderName,
+		IsUsed:     ticket.IsUsed,
+		UsedAt:     &usedAtStr,
+	}, nil
 }
