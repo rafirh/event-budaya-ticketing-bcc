@@ -20,8 +20,7 @@ func (r *adminWalletRepository) FindOrCreate() (*model.AdminWallet, error) {
 	var wallet model.AdminWallet
 	err := r.db.First(&wallet).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// Create new admin wallet
+		if err == gorm.ErrRecordNotFound 
 			wallet = model.AdminWallet{
 				ID:      uuid.New(),
 				Balance: 0,
@@ -30,7 +29,7 @@ func (r *adminWalletRepository) FindOrCreate() (*model.AdminWallet, error) {
 				return nil, err
 			}
 			return &wallet, nil
-		}
+		
 		return nil, err
 	}
 	return &wallet, nil

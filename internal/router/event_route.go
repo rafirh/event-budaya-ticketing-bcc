@@ -13,11 +13,6 @@ func eventRoutes(api fiber.Router, eventHandler *handler.EventHandler, tokenRepo
 	events.Get("/", eventHandler.GetAll)
 	events.Get("/:slug", eventHandler.GetBySlug)
 
-	// Promoter routes
 	promoterEvents := events.Group("", middleware.AuthMiddleware(tokenRepo), middleware.PromoterMiddleware())
 	promoterEvents.Post("/", eventHandler.CreateEvent)
-
-	// Webhook routes (public, no auth needed)
-	webhook := api.Group("/webhook")
-	webhook.Post("/events/payment", eventHandler.EventCreationPaymentWebhook)
 }
