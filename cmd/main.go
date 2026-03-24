@@ -66,14 +66,11 @@ func main() {
 	midtransClient := payment.NewMidtransClient(config.AppConfig.MidtransServer, config.AppConfig.MidtransEnv)
 
 	var uploader storage.Uploader
-	mailSender := email.NewSMTPSender(email.SMTPConfig{
-		Host:       config.AppConfig.MailHost,
-		Port:       config.AppConfig.MailPort,
-		Username:   config.AppConfig.MailUsername,
-		Password:   config.AppConfig.MailPassword,
-		Encryption: config.AppConfig.MailEncryption,
-		FromAddr:   config.AppConfig.MailFromAddress,
-		FromName:   config.AppConfig.MailFromName,
+	mailSender := email.NewMailjetSender(email.MailjetConfig{
+		APIKey:    config.AppConfig.MailjetAPIKey,
+		APISecret: config.AppConfig.MailjetAPISecret,
+		FromAddr:  config.AppConfig.MailFromAddress,
+		FromName:  config.AppConfig.MailFromName,
 	})
 
 	if config.AppConfig.S3Bucket != "" && config.AppConfig.S3Region != "" {
