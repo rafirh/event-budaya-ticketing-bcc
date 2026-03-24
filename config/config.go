@@ -13,6 +13,7 @@ type Config struct {
 	AppEnv              string
 	AppPort             string
 	AppURL              string
+	Timezone            string
 	DBHost              string
 	DBPort              string
 	DBUser              string
@@ -57,6 +58,7 @@ func LoadConfig() {
 		AppEnv:              getEnv("APP_ENV", "development"),
 		AppPort:             getEnv("APP_PORT", "3000"),
 		AppURL:              getEnv("APP_URL", "http://localhost:3000"),
+		Timezone:            getEnv("TIMEZONE", "Asia/Jakarta"),
 		DBHost:              getEnv("DB_HOST", "localhost"),
 		DBPort:              getEnv("DB_PORT", "5432"),
 		DBUser:              getEnv("DB_USER", "postgres"),
