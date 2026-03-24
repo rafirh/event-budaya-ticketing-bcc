@@ -101,7 +101,7 @@ func (u *authUsecase) sendVerificationEmail(toName, toEmail, verificationLink st
 	)
 
 	if err := u.mailSender.Send(toEmail, subject, body); err != nil {
-		return errors.New("failed to send verification email")
+		return errors.New("failed to send verification email: " + err.Error())
 	}
 
 	return nil
