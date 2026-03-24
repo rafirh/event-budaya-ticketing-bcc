@@ -114,3 +114,74 @@ func ToEventDetailResponse(event model.Event) EventDetailResponse {
 		BannerURL:            event.BannerURL,
 	}
 }
+
+type PaymentInfo struct {
+	Status        string     `json:"status"` // pending, settlement, failure, cancelled
+	Amount        float64    `json:"amount"`
+	PaymentURL    *string    `json:"payment_url"`
+	PaymentMethod *string    `json:"payment_method"`
+	PaidAt        *time.Time `json:"paid_at"`
+}
+
+type EventPromoterListResponse struct {
+	ID                   uuid.UUID             `json:"id"`
+	Title                string                `json:"title"`
+	Slug                 *string               `json:"slug"`
+	Category             *EventCategorySummary `json:"category"`
+	BannerURL            *string               `json:"banner_url"`
+	Summary              *string               `json:"summary"`
+	Status               string                `json:"status"` // draft, published, cancelled
+	StartDate            *time.Time            `json:"start_date"`
+	EndDate              *time.Time            `json:"end_date"`
+	RegistrationDeadline *time.Time            `json:"registration_deadline"`
+	Venue                *string               `json:"venue"`
+	IsPaid               bool                  `json:"is_paid"`
+	Price                float64               `json:"price"`
+	Quota                int                   `json:"quota"`
+	Sold                 int                   `json:"sold"`
+	CreatedAt            time.Time             `json:"created_at"`
+	UpdatedAt            *time.Time            `json:"updated_at"`
+	Payment              *PaymentInfo          `json:"payment"`
+}
+
+func ToEventPromoterListResponse(event model.Event, payment *model.EventCreationPayment) EventPromoterListResponse {
+	var category *EventCategorySummary
+	if event.Category != nil {
+		category = &EventCategorySummary{
+			ID:   event.Category.ID,
+			Name: event.Category.Name,
+		}
+	}
+
+	var paymentInfo *PaymentInfo
+	if payment != nil {
+		paymentInfo = &PaymentInfo{
+			Status:        payment.Status,
+			Amount:        payment.Amount,
+			PaymentURL:    payment.PaymentURL,
+			PaymentMethod: payment.PaymentMethod,
+			PaidAt:        payment.PaidAt,
+		}
+	}
+
+	return EventPromoterListResponse{
+		ID:                   event.ID,
+		Title:                event.Title,
+		Slug:                 event.Slug,
+		Category:             category,
+		BannerURL:            event.BannerURL,
+		Summary:              event.Summary,
+		Status:               event.Status,
+		StartDate:            event.StartDate,
+		EndDate:              event.EndDate,
+		RegistrationDeadline: event.RegistrationDeadline,
+		Venue:                event.Venue,
+		IsPaid:               event.IsPaid,
+		Price:                event.Price,
+		Quota:                event.Quota,
+		Sold:                 event.Sold,
+		CreatedAt:            event.CreatedAt,
+		UpdatedAt:            event.UpdatedAt,
+		Payment:              paymentInfo,
+	}
+}

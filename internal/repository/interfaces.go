@@ -42,7 +42,7 @@ type EventRepository interface {
 	FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error)
 	FindByID(id string) (*model.Event, error)
 	FindBySlug(slug string) (*model.Event, error)
-	FindByPromoterID(promoterID uuid.UUID, limit, offset int) ([]model.Event, int64, error)
+	FindByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error)
 	Update(event *model.Event) error
 }
 

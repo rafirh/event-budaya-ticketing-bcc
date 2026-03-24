@@ -17,6 +17,7 @@ import (
 type EventUsecase interface {
 	GetAll(search, categoryID, sortBy, sortOrder string, page, limit int) ([]dto.EventListResponse, int64, error)
 	GetBySlug(slug string) (*dto.EventDetailResponse, error)
+	GetByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, page, limit int) ([]dto.EventPromoterListResponse, int64, error)
 	CreateEvent(req dto.CreateEventRequest, promoterID uuid.UUID) (*dto.EventCreatedWithPayment, error)
 	HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest) error
 }
@@ -62,6 +63,22 @@ func (u *eventUsecase) GetAll(search, categoryID, sortBy, sortOrder string, page
 	responses := make([]dto.EventListResponse, 0, len(events))
 	for _, event := range events {
 		responses = append(responses, dto.ToEventListResponse(event))
+	}
+
+	return responses, total, nil
+}
+
+func (u *eventUsecase) GetByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, page, limit int) ([]dto.EventPromoterListResponse, int64, error) {
+	offset := (page - 1) * limit
+
+	events, total, err := u.eventRepo.FindByPromoterID(promoterID, search, categoryID, sortBy, sortOrder, limit, offset)
+	if err != nil {
+		return nil, 0, errors.New("failed to fetch events")
+	}
+
+	responses := make([]dto.EventPromoterListResponse, 0, len(events))
+	for _, event := range events {
+		responses = append(responses, dto.ToEventPromoterListResponse(event, event.PaymentInfo))
 	}
 
 	return responses, total, nil
