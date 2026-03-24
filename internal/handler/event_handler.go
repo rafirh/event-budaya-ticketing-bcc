@@ -4,8 +4,10 @@ import (
 	"math"
 	"strconv"
 
+	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/pkg/response"
+	"event-budaya-ticketing-bcc/pkg/validator"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -93,4 +95,52 @@ func (h *EventHandler) GetBySlug(c *fiber.Ctx) error {
 	}
 
 	return response.Success(c, fiber.StatusOK, "Event retrieved successfully", event)
+}
+
+func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
+	// Get promoter ID from context
+	userID := c.Locals("userID")
+	if userID == nil {
+		return response.Error(c, fiber.StatusUnauthorized, "User ID not found in context")
+	}
+
+	promoterID, err := uuid.Parse(userID.(string))
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid user ID")
+	}
+
+	// Parse request body
+	var req dto.CreateEventRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if errors := validator.ValidateStruct(req); errors != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Validation error: "+errors[0].Message)
+	}
+
+	// Create event with payment
+	result, err := h.eventUsecase.CreateEvent(req, promoterID)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusCreated, "Event created successfully, please complete payment", result)
+}
+
+func (h *EventHandler) EventCreationPaymentWebhook(c *fiber.Ctx) error {
+	var req dto.MidtransWebhookRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid webhook payload")
+	}
+
+	// TODO: Validate Midtrans webhook signature
+
+	// Handle event creation payment callback
+	if err := h.eventUsecase.HandleEventPaymentWebhook(&req); err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Webhook processed successfully", nil)
 }

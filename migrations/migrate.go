@@ -20,6 +20,9 @@ func Migrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.User{},
 		&model.PersonalAccessToken{},
+		&model.EmailVerificationToken{},
+		&model.Fee{},
+		&model.AdminWallet{},
 		&model.EventCategory{},
 		&model.Event{},
 		&model.EventComment{},
@@ -28,6 +31,8 @@ func Migrate(db *gorm.DB) {
 		&model.Payment{},
 		&model.PromotorWallet{},
 		&model.WalletTransaction{},
+		&model.PromoterTransactionHistory{},
+		&model.EventCreationPayment{},
 	)
 
 	if err != nil {
@@ -40,6 +45,8 @@ func Migrate(db *gorm.DB) {
 func Seed(db *gorm.DB) {
 	log.Println("Running seeders...")
 	seedUsers(db)
+	seedFees(db)
+	seedAdminWallet(db)
 	seedEventCategories(db)
 	seedEvents(db)
 	log.Println("Seeders completed successfully")
@@ -47,7 +54,7 @@ func Seed(db *gorm.DB) {
 
 func Fresh(db *gorm.DB) {
 	log.Println("Dropping all tables...")
-	db.Migrator().DropTable(&model.WalletTransaction{}, &model.PromotorWallet{}, &model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.PersonalAccessToken{}, &model.Event{}, &model.EventCategory{}, &model.User{})
+	db.Migrator().DropTable(&model.PromoterTransactionHistory{}, &model.WalletTransaction{}, &model.PromotorWallet{}, &model.Payment{}, &model.Ticket{}, &model.Order{}, &model.EventComment{}, &model.Event{}, &model.EventCategory{}, &model.AdminWallet{}, &model.Fee{}, &model.PersonalAccessToken{}, &model.EmailVerificationToken{}, &model.User{})
 	log.Println("All tables dropped")
 	Migrate(db)
 }

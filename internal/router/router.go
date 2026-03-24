@@ -19,7 +19,7 @@ func SetupRoutes(app *fiber.App, authHandler *handler.AuthHandler, categoryHandl
 	api := app.Group("/api")
 	authRoutes(api, authHandler, tokenRepo)
 	categoryRoutes(api, categoryHandler)
-	eventRoutes(api, eventHandler)
+	eventRoutes(api, eventHandler, tokenRepo)
 	commentRoutes(api, eventCommentHandler, tokenRepo)
 	orderRoutes(api, orderHandler, tokenRepo)
 	ticketRoutes(api, ticketHandler, tokenRepo)

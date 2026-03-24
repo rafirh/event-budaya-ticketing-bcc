@@ -34,7 +34,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 
-	return response.Success(c, fiber.StatusCreated, "User registered successfully", user)
+	return response.Success(c, fiber.StatusCreated, "User registered successfully, please check your email for account activation", user)
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
@@ -53,6 +53,36 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	}
 
 	return response.Success(c, fiber.StatusOK, "Login successful", result)
+}
+
+func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
+	token := c.Query("token")
+	if token == "" {
+		return response.Error(c, fiber.StatusBadRequest, "verification token is required")
+	}
+
+	if err := h.authUsecase.VerifyEmail(token); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Email verified successfully. You can now login.", nil)
+}
+
+func (h *AuthHandler) ResendVerificationEmail(c *fiber.Ctx) error {
+	var req dto.ResendVerificationEmailRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	if errors := validator.ValidateStruct(req); errors != nil {
+		return response.ValidationError(c, errors)
+	}
+
+	if err := h.authUsecase.ResendVerificationEmail(req.Email); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Verification email resent successfully", nil)
 }
 
 func (h *AuthHandler) Me(c *fiber.Ctx) error {

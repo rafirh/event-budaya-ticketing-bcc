@@ -27,9 +27,31 @@ CREATE TABLE users (
     gender VARCHAR(10)
         CHECK (gender IN ('male','female','other')),
 
+    email_verified_at TIMESTAMP,
+
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP
 );
+
+
+-- =====================================================
+-- EMAIL VERIFICATION TOKENS
+-- =====================================================
+CREATE TABLE email_verification_tokens (
+    id SERIAL PRIMARY KEY,
+
+    user_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    token_hash VARCHAR(64) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_email_verification_user ON email_verification_tokens(user_id);
+CREATE INDEX idx_email_verification_expires ON email_verification_tokens(expires_at);
 
 
 -- =====================================================
@@ -114,8 +136,14 @@ CREATE TABLE orders (
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 
-    order_id UUID UNIQUE
+    payment_type VARCHAR(50) NOT NULL DEFAULT 'ORDER'
+        CHECK (payment_type IN ('ORDER', 'EVENT_POSTING_FEE')),
+
+    order_id UUID
         REFERENCES orders(id) ON DELETE CASCADE,
+
+    event_id UUID
+        REFERENCES events(id) ON DELETE CASCADE,
 
     payment_method VARCHAR(50),
     payment_gateway VARCHAR(50),
@@ -129,6 +157,10 @@ CREATE TABLE payments (
     paid_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX idx_payments_order ON payments(order_id);
+CREATE INDEX idx_payments_event ON payments(event_id);
+CREATE INDEX idx_payments_type ON payments(payment_type);
 
 
 -- =====================================================
@@ -237,3 +269,71 @@ CREATE INDEX idx_tickets_identity_number ON tickets(identity_number);
 CREATE INDEX idx_comments_event ON event_comments(event_id);
 
 CREATE INDEX idx_wallet_promoter ON promoter_wallets(promoter_id);
+
+
+-- =====================================================
+-- FEE SETTINGS (SERVICE FEE & EVENT POSTING FEE)
+-- =====================================================
+CREATE TABLE fee_settings (
+    id SERIAL PRIMARY KEY,
+
+    fee_type VARCHAR(50) NOT NULL
+        CHECK (fee_type IN ('SERVICE_FEE', 'EVENT_POSTING_FEE')),
+
+    calculation_type VARCHAR(20) NOT NULL
+        CHECK (calculation_type IN ('percentage', 'fixed')),
+
+    amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- ADMIN WALLET
+-- =====================================================
+CREATE TABLE admin_wallets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    balance NUMERIC(14, 2) DEFAULT 0,
+
+    total_revenue NUMERIC(14, 2) DEFAULT 0,
+    total_withdrawn NUMERIC(14, 2) DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP
+);
+
+
+-- =====================================================
+-- PROMOTER TRANSACTION HISTORY
+-- =====================================================
+CREATE TABLE promoter_transaction_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    promoter_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    transaction_type VARCHAR(50) NOT NULL
+        CHECK (transaction_type IN ('TICKET_COMMISSION', 'WITHDRAW', 'POSTING_FEE', 'REFUND', 'OTHER')),
+
+    direction VARCHAR(10) NOT NULL
+        CHECK (direction IN ('IN', 'OUT')),
+
+    amount NUMERIC(12, 2) NOT NULL,
+    balance_before NUMERIC(14, 2),
+    balance_after NUMERIC(14, 2),
+
+    reference_type VARCHAR(50),
+    reference_id UUID,
+
+    description TEXT,
+    notes TEXT,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_promoter_transactions_promoter ON promoter_transaction_history(promoter_id);
+CREATE INDEX idx_promoter_transactions_type ON promoter_transaction_history(transaction_type);
+CREATE INDEX idx_promoter_transactions_created ON promoter_transaction_history(created_at);
