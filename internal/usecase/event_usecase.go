@@ -198,22 +198,23 @@ func (u *eventUsecase) HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest
 		return errors.New("payment record not found for order ID: " + req.OrderID)
 	}
 
-	paymentStatus := "failure"
-	if req.TransactionStatus == "settlement" || req.TransactionStatus == "capture" {
-		paymentStatus = "settlement"
-	} else if req.TransactionStatus == "pending" {
-		paymentStatus = "pending"
-		return nil
-	} else if req.TransactionStatus == "expire" || req.TransactionStatus == "cancel" {
-		paymentStatus = "cancelled"
+	paymentStatus := mapEventPaymentStatus(req.TransactionStatus, req.FraudStatus)
+	paymentMethod := req.PaymentType
+	if paymentMethod != "" {
+		payment.PaymentMethod = &paymentMethod
 	}
 
 	payment.Status = paymentStatus
+	if paymentStatus == "paid" {
+		now := time.Now()
+		payment.PaidAt = &now
+	}
+
 	if err := u.eventCreationPaymentRepo.Update(payment); err != nil {
 		return errors.New("failed to update payment status")
 	}
 
-	if paymentStatus != "settlement" {
+	if paymentStatus != "paid" {
 		return nil
 	}
 
@@ -256,6 +257,24 @@ func (u *eventUsecase) HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest
 	}
 
 	return nil
+}
+
+func mapEventPaymentStatus(transactionStatus, fraudStatus string) string {
+	switch transactionStatus {
+	case "settlement":
+		return "paid"
+	case "capture":
+		if fraudStatus == "accept" {
+			return "paid"
+		}
+		return "pending"
+	case "pending":
+		return "pending"
+	case "deny", "cancel", "expire", "failure":
+		return "failure"
+	default:
+		return "pending"
+	}
 }
 
 func stringPtr(s string) *string {
