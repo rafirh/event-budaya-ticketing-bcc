@@ -1,13 +1,13 @@
 package handler
 
 import (
+	"context"
 	"math"
 	"strconv"
 
-	"event-budaya-ticketing-bcc/internal/dto"
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/pkg/response"
-	"event-budaya-ticketing-bcc/pkg/validator"
+	"event-budaya-ticketing-bcc/pkg/storage"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -15,10 +15,11 @@ import (
 
 type EventHandler struct {
 	eventUsecase usecase.EventUsecase
+	uploader     storage.Uploader
 }
 
-func NewEventHandler(eventUsecase usecase.EventUsecase) *EventHandler {
-	return &EventHandler{eventUsecase: eventUsecase}
+func NewEventHandler(eventUsecase usecase.EventUsecase, uploader storage.Uploader) *EventHandler {
+	return &EventHandler{eventUsecase: eventUsecase, uploader: uploader}
 }
 
 func (h *EventHandler) GetAll(c *fiber.Ctx) error {
@@ -183,16 +184,46 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "Invalid user ID")
 	}
 
-	var req dto.CreateEventRequest
-	if err := c.BodyParser(&req); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	// Get banner file
+	bannerFile, err := c.FormFile("banner")
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Banner file is required")
 	}
 
-	if errors := validator.ValidateStruct(req); errors != nil {
-		return response.Error(c, fiber.StatusBadRequest, "Validation error: "+errors[0].Message)
+	if h.uploader == nil {
+		return response.Error(c, fiber.StatusInternalServerError, "Storage service is not configured")
 	}
 
-	result, err := h.eventUsecase.CreateEvent(req, promoterID)
+	// Upload banner
+	bannerURL, err := h.uploader.UploadImage(context.Background(), bannerFile, "events")
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, "Failed to upload banner: "+err.Error())
+	}
+
+	// Parse form data to request DTO
+	req, err := h.eventUsecase.ParseCreateEventRequest(
+		c.FormValue("category_id"),
+		c.FormValue("title"),
+		c.FormValue("summary"),
+		c.FormValue("description"),
+		c.FormValue("venue"),
+		c.FormValue("address"),
+		c.FormValue("google_maps_url"),
+		c.FormValue("start_date"),
+		c.FormValue("end_date"),
+		c.FormValue("registration_deadline"),
+		c.FormValue("quota"),
+		c.FormValue("price"),
+		c.FormValue("is_paid"),
+	)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	req.BannerURL = &bannerURL
+
+	// Create event with payment
+	result, err := h.eventUsecase.CreateEvent(*req, promoterID)
 	if err != nil {
 		switch err.Error() {
 		case "category not found":

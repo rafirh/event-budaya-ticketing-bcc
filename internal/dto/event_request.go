@@ -20,7 +20,7 @@ type CreateEventRequest struct {
 	IsPaid               bool       `json:"is_paid" validate:"required"`
 	Price                float64    `json:"price" validate:"min=0"`
 	Quota                int        `json:"quota" validate:"required,min=1"`
-	BannerURL            *string    `json:"banner_url"`
+	BannerURL            *string    `json:"-"`
 }
 
 type CreateEventPaymentResponse struct {
