@@ -17,6 +17,9 @@ func authRoutes(api fiber.Router, authHandler *handler.AuthHandler, tokenRepo re
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/logout", middleware.AuthMiddleware(tokenRepo), authHandler.Logout)
 
+	auth.Get("/google/login", authHandler.GoogleLogin)
+	auth.Get("/google/callback", authHandler.GoogleCallback)
+
 	me := api.Group("/me", middleware.AuthMiddleware(tokenRepo))
 	me.Get("", authHandler.Me)
 	me.Patch("", authHandler.UpdateProfile)

@@ -13,12 +13,13 @@ var DB *gorm.DB
 
 func InitDatabase() {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
 		AppConfig.DBHost,
 		AppConfig.DBUser,
 		AppConfig.DBPassword,
 		AppConfig.DBName,
 		AppConfig.DBPort,
+		AppConfig.Timezone,
 	)
 
 	var err error

@@ -28,9 +28,9 @@ type Event struct {
 	Status               string                `gorm:"size:20;default:draft" json:"status"`
 	CreatedAt            time.Time             `json:"created_at"`
 	UpdatedAt            *time.Time            `json:"updated_at"`
-	Promoter             User                  `gorm:"foreignKey:PromoterID" json:"-"`
-	Category             *EventCategory        `gorm:"foreignKey:CategoryID" json:"-"`
-	PaymentInfo          *EventCreationPayment `gorm:"foreignKey:EventID" json:"-"`
+	Promoter             User                  `gorm:"foreignKey:PromoterID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Category             *EventCategory        `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+	PaymentInfo          *EventCreationPayment `gorm:"foreignKey:EventID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
 
 func (Event) TableName() string {

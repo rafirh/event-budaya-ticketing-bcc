@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strings"
 
 	"event-budaya-ticketing-bcc/internal/dto"
@@ -12,11 +13,15 @@ import (
 )
 
 type AuthHandler struct {
-	authUsecase usecase.AuthUsecase
+	authUsecase         usecase.AuthUsecase
+	googleRedirectFEURI string
 }
 
-func NewAuthHandler(authUsecase usecase.AuthUsecase) *AuthHandler {
-	return &AuthHandler{authUsecase: authUsecase}
+func NewAuthHandler(authUsecase usecase.AuthUsecase, googleRedirectFEURI string) *AuthHandler {
+	return &AuthHandler{
+		authUsecase:         authUsecase,
+		googleRedirectFEURI: googleRedirectFEURI,
+	}
 }
 
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
@@ -140,4 +145,48 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	}
 
 	return response.Success(c, fiber.StatusOK, "Logged out successfully", nil)
+}
+
+func (h *AuthHandler) GoogleLogin(c *fiber.Ctx) error {
+	state, err := dto.GenerateRandomState()
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, "Failed to generate state")
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		MaxAge:   600,
+		HTTPOnly: true,
+		Secure:   false,
+		SameSite: fiber.CookieSameSiteLaxMode,
+	})
+
+	url := h.authUsecase.GoogleLoginURL(state)
+	return c.Redirect(url)
+}
+
+func (h *AuthHandler) GoogleCallback(c *fiber.Ctx) error {
+	code := c.Query("code")
+	state := c.Query("state")
+
+	if code == "" || state == "" {
+		return response.Error(c, fiber.StatusBadRequest, "Missing code or state parameter")
+	}
+
+	// Verify state from cookie
+	storedState := c.Cookies("oauth_state")
+	if storedState != state {
+		return response.Error(c, fiber.StatusUnauthorized, "Invalid state parameter - CSRF protection failed")
+	}
+
+	// Exchange code for token and login
+	result, err := h.authUsecase.GoogleCallback(c.Context(), code, state)
+	if err != nil {
+		return response.Error(c, fiber.StatusUnauthorized, err.Error())
+	}
+
+	// Redirect to FE URL with token as query parameter
+	redirectURL := fmt.Sprintf("%s?token=%s", h.googleRedirectFEURI, result.Token)
+	return c.Redirect(redirectURL)
 }

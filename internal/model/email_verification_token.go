@@ -14,7 +14,7 @@ type EmailVerificationToken struct {
 	UsedAt    *time.Time `json:"used_at"`
 	CreatedAt time.Time  `json:"created_at"`
 
-	User User `gorm:"foreignKey:UserID" json:"-"`
+	User User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
 
 func (EmailVerificationToken) TableName() string {

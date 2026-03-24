@@ -9,33 +9,38 @@ import (
 )
 
 type Config struct {
-	AppName         string
-	AppEnv          string
-	AppPort         string
-	AppURL          string
-	DBHost          string
-	DBPort          string
-	DBUser          string
-	DBPassword      string
-	DBName          string
-	JWTSecret       string
-	JWTExpiryHours  int
-	S3Key           string
-	S3Secret        string
-	S3Bucket        string
-	S3Region        string
-	S3PublicBase    string
-	MidtransEnv     string
-	MidtransServer  string
-	MidtransClient  string
-	MailMailer      string
-	MailHost        string
-	MailPort        string
-	MailUsername    string
-	MailPassword    string
-	MailEncryption  string
-	MailFromAddress string
-	MailFromName    string
+	AppName             string
+	AppEnv              string
+	AppPort             string
+	AppURL              string
+	Timezone            string
+	DBHost              string
+	DBPort              string
+	DBUser              string
+	DBPassword          string
+	DBName              string
+	JWTSecret           string
+	JWTExpiryHours      int
+	S3Key               string
+	S3Secret            string
+	S3Bucket            string
+	S3Region            string
+	S3PublicBase        string
+	MidtransEnv         string
+	MidtransServer      string
+	MidtransClient      string
+	MailMailer          string
+	MailHost            string
+	MailPort            string
+	MailUsername        string
+	MailPassword        string
+	MailEncryption      string
+	MailFromAddress     string
+	MailFromName        string
+	GoogleClientID      string
+	GoogleClientSecret  string
+	GoogleRedirectURI   string
+	GoogleRedirectFEURI string
 }
 
 var AppConfig *Config
@@ -49,33 +54,38 @@ func LoadConfig() {
 	jwtExpiry, _ := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "24"))
 
 	AppConfig = &Config{
-		AppName:         getEnv("APP_NAME", "event-budaya-ticketing"),
-		AppEnv:          getEnv("APP_ENV", "development"),
-		AppPort:         getEnv("APP_PORT", "3000"),
-		AppURL:          getEnv("APP_URL", "http://localhost:3000"),
-		DBHost:          getEnv("DB_HOST", "localhost"),
-		DBPort:          getEnv("DB_PORT", "5432"),
-		DBUser:          getEnv("DB_USER", "postgres"),
-		DBPassword:      getEnv("DB_PASSWORD", "secret"),
-		DBName:          getEnv("DB_NAME", "event_budaya_db"),
-		JWTSecret:       getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
-		JWTExpiryHours:  jwtExpiry,
-		S3Key:           getEnv("S3_KEY", ""),
-		S3Secret:        getEnv("S3_SECRET", ""),
-		S3Bucket:        getEnv("S3_BUCKET", ""),
-		S3Region:        getEnv("S3_REGION", ""),
-		S3PublicBase:    getEnv("S3_PUBLIC_BASE_URL", ""),
-		MidtransEnv:     getEnv("MIDTRANS_ENV", "sandbox"),
-		MidtransServer:  getEnv("MIDTRANS_SERVER_KEY", ""),
-		MidtransClient:  getEnv("MIDTRANS_CLIENT_KEY", ""),
-		MailMailer:      getEnv("MAIL_MAILER", "smtp"),
-		MailHost:        getEnv("MAIL_HOST", ""),
-		MailPort:        getEnv("MAIL_PORT", "587"),
-		MailUsername:    getEnv("MAIL_USERNAME", ""),
-		MailPassword:    getEnv("MAIL_PASSWORD", ""),
-		MailEncryption:  getEnv("MAIL_ENCRYPTION", "tls"),
-		MailFromAddress: getEnv("MAIL_FROM_ADDRESS", ""),
-		MailFromName:    getEnv("MAIL_FROM_NAME", "BudayaHub"),
+		AppName:             getEnv("APP_NAME", "event-budaya-ticketing"),
+		AppEnv:              getEnv("APP_ENV", "development"),
+		AppPort:             getEnv("APP_PORT", "3000"),
+		AppURL:              getEnv("APP_URL", "http://localhost:3000"),
+		Timezone:            getEnv("TIMEZONE", "Asia/Jakarta"),
+		DBHost:              getEnv("DB_HOST", "localhost"),
+		DBPort:              getEnv("DB_PORT", "5432"),
+		DBUser:              getEnv("DB_USER", "postgres"),
+		DBPassword:          getEnv("DB_PASSWORD", "secret"),
+		DBName:              getEnv("DB_NAME", "event_budaya_db"),
+		JWTSecret:           getEnv("JWT_SECRET", "your-super-secret-jwt-key"),
+		JWTExpiryHours:      jwtExpiry,
+		S3Key:               getEnv("S3_KEY", ""),
+		S3Secret:            getEnv("S3_SECRET", ""),
+		S3Bucket:            getEnv("S3_BUCKET", ""),
+		S3Region:            getEnv("S3_REGION", ""),
+		S3PublicBase:        getEnv("S3_PUBLIC_BASE_URL", ""),
+		MidtransEnv:         getEnv("MIDTRANS_ENV", "sandbox"),
+		MidtransServer:      getEnv("MIDTRANS_SERVER_KEY", ""),
+		MidtransClient:      getEnv("MIDTRANS_CLIENT_KEY", ""),
+		MailMailer:          getEnv("MAIL_MAILER", "smtp"),
+		MailHost:            getEnv("MAIL_HOST", ""),
+		MailPort:            getEnv("MAIL_PORT", "587"),
+		MailUsername:        getEnv("MAIL_USERNAME", ""),
+		MailPassword:        getEnv("MAIL_PASSWORD", ""),
+		MailEncryption:      getEnv("MAIL_ENCRYPTION", "tls"),
+		MailFromAddress:     getEnv("MAIL_FROM_ADDRESS", ""),
+		MailFromName:        getEnv("MAIL_FROM_NAME", "BudayaHub"),
+		GoogleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
+		GoogleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
+		GoogleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
+		GoogleRedirectFEURI: getEnv("GOOGLE_REDIRECT_URI_FRONTEND", ""),
 	}
 }
 

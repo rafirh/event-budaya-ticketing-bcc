@@ -20,7 +20,7 @@ type Ticket struct {
 	IsUsed         bool       `gorm:"default:false" json:"is_used"`
 	UsedAt         *time.Time `json:"used_at"`
 	CreatedAt      time.Time  `json:"created_at"`
-	Order          Order      `gorm:"foreignKey:OrderID" json:"-"`
+	Order          Order      `gorm:"foreignKey:OrderID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 func (Ticket) TableName() string {

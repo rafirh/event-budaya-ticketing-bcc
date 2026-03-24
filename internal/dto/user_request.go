@@ -23,3 +23,8 @@ type UpdateProfileRequest struct {
 	Phone  *string `json:"phone" validate:"omitempty,max=20"`
 	Gender *string `json:"gender" validate:"omitempty,oneof=male female other"`
 }
+
+type GoogleLoginCallbackRequest struct {
+	Code  string `query:"code" validate:"required"`
+	State string `query:"state" validate:"required"`
+}

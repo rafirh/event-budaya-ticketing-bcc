@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"event-budaya-ticketing-bcc/internal/model"
 	"time"
 
@@ -34,4 +36,13 @@ func ToUserResponse(u *model.User) UserResponse {
 		EmailVerified:   u.EmailVerifiedAt != nil,
 		EmailVerifiedAt: u.EmailVerifiedAt,
 	}
+}
+
+func GenerateRandomState() (string, error) {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
