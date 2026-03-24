@@ -65,6 +65,10 @@ type TicketRepository interface {
 	FindByOrderID(orderID string) ([]model.Ticket, error)
 	FindByID(id string) (*model.Ticket, error)
 	FindByUserID(userID string) ([]model.Ticket, error)
+	FindByEventID(eventID string, search string, limit, offset int) ([]model.Ticket, int64, error)
+	FindByIDAndEventID(ticketID, eventID string) (*model.Ticket, error)
+	FindByCodeAndEventID(ticketCode, eventID string) (*model.Ticket, error)
+	Update(ticket *model.Ticket) error
 }
 
 type PaymentRepository interface {

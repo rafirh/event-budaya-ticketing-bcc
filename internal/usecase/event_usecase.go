@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"event-budaya-ticketing-bcc/internal/dto"
@@ -19,6 +20,7 @@ type EventUsecase interface {
 	GetBySlug(slug string) (*dto.EventDetailResponse, error)
 	GetByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, page, limit int) ([]dto.EventPromoterListResponse, int64, error)
 	CreateEvent(req dto.CreateEventRequest, promoterID uuid.UUID) (*dto.EventCreatedWithPayment, error)
+	ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error)
 	HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest) error
 }
 
@@ -96,6 +98,106 @@ func (u *eventUsecase) GetBySlug(slug string) (*dto.EventDetailResponse, error) 
 
 	response := dto.ToEventDetailResponse(*event)
 	return &response, nil
+}
+
+func (u *eventUsecase) ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error) {
+	req := &dto.CreateEventRequest{}
+
+	// Parse category ID
+	if categoryIDStr != "" {
+		categoryID, err := uuid.Parse(categoryIDStr)
+		if err != nil {
+			return nil, errors.New("invalid category_id format")
+		}
+		req.CategoryID = &categoryID
+	}
+
+	// Parse title (required)
+	if title == "" {
+		return nil, errors.New("title is required")
+	}
+	req.Title = title
+
+	// Parse quota (required)
+	if quotaStr == "" {
+		return nil, errors.New("quota is required")
+	}
+	quota, err := strconv.Atoi(quotaStr)
+	if err != nil {
+		return nil, errors.New("invalid quota format")
+	}
+	req.Quota = quota
+
+	// Parse is_paid
+	req.IsPaid = isPaidStr == "true"
+
+	// Parse price (optional)
+	if priceStr != "" {
+		price, err := strconv.ParseFloat(priceStr, 64)
+		if err != nil {
+			return nil, errors.New("invalid price format")
+		}
+		req.Price = price
+	}
+
+	// Parse optional string fields
+	if summaryStr != "" {
+		req.Summary = &summaryStr
+	}
+	if descriptionStr != "" {
+		req.Description = &descriptionStr
+	}
+	if venueStr != "" {
+		req.Venue = &venueStr
+	}
+	if addressStr != "" {
+		req.Address = &addressStr
+	}
+	if googleMapsURLStr != "" {
+		req.GoogleMapsURL = &googleMapsURLStr
+	}
+
+	// Parse dates
+	if startDateStr != "" {
+		startDate, err := parseDateTime(startDateStr)
+		if err != nil {
+			return nil, errors.New("invalid start_date format")
+		}
+		req.StartDate = startDate
+	}
+	if endDateStr != "" {
+		endDate, err := parseDateTime(endDateStr)
+		if err != nil {
+			return nil, errors.New("invalid end_date format")
+		}
+		req.EndDate = endDate
+	}
+	if registrationDeadlineStr != "" {
+		regDeadline, err := parseDateTime(registrationDeadlineStr)
+		if err != nil {
+			return nil, errors.New("invalid registration_deadline format")
+		}
+		req.RegistrationDeadline = regDeadline
+	}
+
+	return req, nil
+}
+
+// Helper function to parse datetime strings
+func parseDateTime(dateStr string) (*time.Time, error) {
+	// Try ISO8601 format first
+	t, err := time.Parse("2006-01-02T15:04:05Z07:00", dateStr)
+	if err == nil {
+		return &t, nil
+	}
+
+	// Try simple date format
+	t, err = time.Parse("2006-01-02", dateStr)
+	if err == nil {
+		return &t, nil
+	}
+
+	return nil, errors.New("invalid datetime format")
 }
 
 func (u *eventUsecase) CreateEvent(req dto.CreateEventRequest, promoterID uuid.UUID) (*dto.EventCreatedWithPayment, error) {

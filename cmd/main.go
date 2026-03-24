@@ -99,10 +99,10 @@ func main() {
 	walletUsecase := usecase.NewWalletUsecase(walletRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
-	eventHandler := handler.NewEventHandler(eventUsecase)
+	eventHandler := handler.NewEventHandler(eventUsecase, uploader)
 	eventCommentHandler := handler.NewEventCommentHandler(eventCommentUsecase)
 	orderHandler := handler.NewOrderHandler(orderUsecase)
-	ticketHandler := handler.NewTicketHandler(ticketUsecase)
+	ticketHandler := handler.NewTicketHandler(ticketUsecase, eventRepo)
 	walletHandler := handler.NewWalletHandler(walletUsecase)
 
 	app := fiber.New(fiber.Config{
