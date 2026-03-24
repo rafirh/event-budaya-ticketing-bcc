@@ -94,7 +94,7 @@ func main() {
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo, eventCreationPaymentRepo, feeRepo, adminWalletRepo, promoterTransactionRepo, midtransClient)
 	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)
-	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, midtransClient, config.AppConfig.MidtransServer)
+	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, eventUsecase, midtransClient, config.AppConfig.MidtransServer)
 	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)
 	walletUsecase := usecase.NewWalletUsecase(walletRepo)
 	authHandler := handler.NewAuthHandler(authUsecase)

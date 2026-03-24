@@ -35,6 +35,7 @@ type orderUsecase struct {
 	paymentRepo     repository.PaymentRepository
 	walletRepo      repository.PromoterWalletRepository
 	transactionRepo repository.WalletTransactionRepository
+	eventUsecase    EventUsecase
 	midtransClient  *payment.Client
 	midtransServer  string
 }
@@ -47,6 +48,7 @@ func NewOrderUsecase(
 	paymentRepo repository.PaymentRepository,
 	walletRepo repository.PromoterWalletRepository,
 	transactionRepo repository.WalletTransactionRepository,
+	eventUsecase EventUsecase,
 	midtransClient *payment.Client,
 	midtransServer string,
 ) OrderUsecase {
@@ -58,6 +60,7 @@ func NewOrderUsecase(
 		paymentRepo:     paymentRepo,
 		walletRepo:      walletRepo,
 		transactionRepo: transactionRepo,
+		eventUsecase:    eventUsecase,
 		midtransClient:  midtransClient,
 		midtransServer:  midtransServer,
 	}
@@ -201,6 +204,10 @@ func (u *orderUsecase) CreateTicketOrder(userID string, req *dto.CreateTicketOrd
 }
 
 func (u *orderUsecase) HandleMidtransWebhook(req *dto.MidtransWebhookRequest) error {
+	if strings.HasPrefix(req.OrderID, "EVT-") {
+		return u.eventUsecase.HandleEventPaymentWebhook(req)
+	}
+
 	if u.midtransServer == "" {
 		return errors.New("midtrans server key is not configured")
 	}

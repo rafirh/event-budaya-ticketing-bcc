@@ -59,7 +59,6 @@ func (u *ticketUsecase) GetMyTicketDetail(userID, ticketID string) (*dto.MyTicke
 		return nil, errors.New("ticket not found")
 	}
 
-	// Check if ticket belongs to the user
 	if ticket.Order.UserID != parsedUserID {
 		return nil, errors.New("unauthorized")
 	}
