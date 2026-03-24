@@ -37,6 +37,8 @@ type Config struct {
 	MailEncryption      string
 	MailFromAddress     string
 	MailFromName        string
+	MailjetAPIKey       string
+	MailjetAPISecret    string
 	GoogleClientID      string
 	GoogleClientSecret  string
 	GoogleRedirectURI   string
@@ -74,7 +76,7 @@ func LoadConfig() {
 		MidtransEnv:         getEnv("MIDTRANS_ENV", "sandbox"),
 		MidtransServer:      getEnv("MIDTRANS_SERVER_KEY", ""),
 		MidtransClient:      getEnv("MIDTRANS_CLIENT_KEY", ""),
-		MailMailer:          getEnv("MAIL_MAILER", "smtp"),
+		MailMailer:          getEnv("MAIL_MAILER", "mailjet"),
 		MailHost:            getEnv("MAIL_HOST", ""),
 		MailPort:            getEnv("MAIL_PORT", "587"),
 		MailUsername:        getEnv("MAIL_USERNAME", ""),
@@ -82,6 +84,8 @@ func LoadConfig() {
 		MailEncryption:      getEnv("MAIL_ENCRYPTION", "tls"),
 		MailFromAddress:     getEnv("MAIL_FROM_ADDRESS", ""),
 		MailFromName:        getEnv("MAIL_FROM_NAME", "BudayaHub"),
+		MailjetAPIKey:       getEnv("MAILJET_API_KEY", ""),
+		MailjetAPISecret:    getEnv("MAILJET_API_SECRET", ""),
 		GoogleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
