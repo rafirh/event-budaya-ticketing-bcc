@@ -16,6 +16,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
 	"event-budaya-ticketing-bcc/pkg/email"
+	"event-budaya-ticketing-bcc/pkg/oauth"
 	"event-budaya-ticketing-bcc/pkg/storage"
 
 	"golang.org/x/crypto/bcrypt"
@@ -30,6 +31,8 @@ type AuthUsecase interface {
 	GetMe(id string) (*dto.UserResponse, error)
 	UpdateProfile(userID string, req *dto.UpdateProfileRequest, photo *multipart.FileHeader) (*dto.UserResponse, error)
 	Logout(token string) error
+	GoogleLoginURL(state string) string
+	GoogleCallback(ctx context.Context, code, state string) (*dto.LoginResponse, error)
 }
 
 type authUsecase struct {
@@ -39,6 +42,7 @@ type authUsecase struct {
 	mailSender            email.Sender
 	appURL                string
 	uploader              storage.Uploader
+	googleOAuthProvider   *oauth.GoogleOAuthProvider
 }
 
 func NewAuthUsecase(
@@ -48,6 +52,7 @@ func NewAuthUsecase(
 	mailSender email.Sender,
 	appURL string,
 	uploader storage.Uploader,
+	googleOAuthProvider *oauth.GoogleOAuthProvider,
 ) AuthUsecase {
 	return &authUsecase{
 		userRepo:              userRepo,
@@ -56,6 +61,7 @@ func NewAuthUsecase(
 		mailSender:            mailSender,
 		appURL:                appURL,
 		uploader:              uploader,
+		googleOAuthProvider:   googleOAuthProvider,
 	}
 }
 
@@ -341,4 +347,85 @@ func (u *authUsecase) UpdateProfile(userID string, req *dto.UpdateProfileRequest
 
 func (u *authUsecase) Logout(token string) error {
 	return u.tokenRepo.DeleteByToken(token)
+}
+
+func (u *authUsecase) GoogleLoginURL(state string) string {
+	return u.googleOAuthProvider.GetAuthURL(state)
+}
+
+func (u *authUsecase) GoogleCallback(ctx context.Context, code, state string) (*dto.LoginResponse, error) {
+	googleUser, err := u.googleOAuthProvider.GetUserInfo(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+
+	if googleUser.Email == "" {
+		return nil, errors.New("email not provided by Google")
+	}
+
+	user, err := u.userRepo.FindByEmail(googleUser.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			newUser := &model.User{
+				Email:           googleUser.Email,
+				Name:            googleUser.Name,
+				Password:        "", // Will be set below
+				Role:            "user",
+				EmailVerifiedAt: &time.Time{},
+				CreatedAt:       time.Now(),
+			}
+
+			if randPass, err := generateRandomPassword(); err == nil {
+				hashPassword, _ := bcrypt.GenerateFromPassword([]byte(randPass), bcrypt.DefaultCost)
+				newUser.Password = string(hashPassword)
+			}
+
+			now := time.Now()
+			newUser.EmailVerifiedAt = &now
+
+			if err := u.userRepo.Create(newUser); err != nil {
+				return nil, errors.New("failed to create user from Google account")
+			}
+
+			user = newUser
+		} else {
+			return nil, errors.New("failed to get user")
+		}
+	} else {
+		if user.EmailVerifiedAt == nil {
+			now := time.Now()
+			user.EmailVerifiedAt = &now
+			if err := u.userRepo.Update(user); err != nil {
+				return nil, errors.New("failed to update user email verification status")
+			}
+		}
+	}
+
+	rawToken, err := generateToken()
+	if err != nil {
+		return nil, errors.New("failed to generate token")
+	}
+
+	pat := &model.PersonalAccessToken{
+		UserID: user.ID,
+		Token:  rawToken,
+		Name:   "google_login",
+	}
+	if err := u.tokenRepo.Create(pat); err != nil {
+		return nil, errors.New("failed to save token")
+	}
+
+	return &dto.LoginResponse{
+		User:  dto.ToUserResponse(user),
+		Token: rawToken,
+	}, nil
+}
+
+func generateRandomPassword() (string, error) {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }

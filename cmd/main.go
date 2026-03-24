@@ -14,6 +14,7 @@ import (
 	"event-budaya-ticketing-bcc/internal/usecase"
 	"event-budaya-ticketing-bcc/migrations"
 	"event-budaya-ticketing-bcc/pkg/email"
+	"event-budaya-ticketing-bcc/pkg/oauth"
 	"event-budaya-ticketing-bcc/pkg/payment"
 	"event-budaya-ticketing-bcc/pkg/storage"
 
@@ -90,14 +91,21 @@ func main() {
 		}
 	}
 
-	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, emailVerificationRepo, mailSender, config.AppConfig.AppURL, uploader)
+	// Initialize Google OAuth provider
+	googleOAuthProvider := oauth.NewGoogleOAuthProvider(
+		config.AppConfig.GoogleClientID,
+		config.AppConfig.GoogleClientSecret,
+		config.AppConfig.GoogleRedirectURI,
+	)
+
+	authUsecase := usecase.NewAuthUsecase(userRepo, tokenRepo, emailVerificationRepo, mailSender, config.AppConfig.AppURL, uploader, googleOAuthProvider)
 	categoryUsecase := usecase.NewCategoryUsecase(categoryRepo)
 	eventUsecase := usecase.NewEventUsecase(eventRepo, eventCreationPaymentRepo, categoryRepo, feeRepo, adminWalletRepo, promoterTransactionRepo, midtransClient)
 	eventCommentUsecase := usecase.NewEventCommentUsecase(eventRepo, eventCommentRepo)
 	orderUsecase := usecase.NewOrderUsecase(userRepo, eventRepo, orderRepo, ticketRepo, paymentRepo, walletRepo, transactionRepo, eventUsecase, midtransClient, config.AppConfig.MidtransServer)
 	ticketUsecase := usecase.NewTicketUsecase(ticketRepo)
 	walletUsecase := usecase.NewWalletUsecase(walletRepo)
-	authHandler := handler.NewAuthHandler(authUsecase)
+	authHandler := handler.NewAuthHandler(authUsecase, config.AppConfig.GoogleRedirectFEURI)
 	categoryHandler := handler.NewCategoryHandler(categoryUsecase)
 	eventHandler := handler.NewEventHandler(eventUsecase, uploader)
 	eventCommentHandler := handler.NewEventCommentHandler(eventCommentUsecase)
