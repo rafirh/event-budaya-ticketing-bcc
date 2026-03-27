@@ -85,6 +85,8 @@ CREATE TABLE events (
     venue VARCHAR(200),
     address TEXT,
     google_maps_url TEXT,
+    time VARCHAR(50),
+    published_date DATE,
     latitude NUMERIC(10,7),
     longitude NUMERIC(10,7),
 
