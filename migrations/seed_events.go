@@ -28,6 +28,8 @@ func seedEvents(db *gorm.DB) {
 	}
 
 	desc := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+	latitude := -7.953077
+	longitude := 112.614193
 
 	eventSeeds := []struct {
 		Title                string
@@ -61,6 +63,12 @@ func seedEvents(db *gorm.DB) {
 		var count int64
 		db.Model(&model.Event{}).Where("title = ?", seed.Title).Count(&count)
 		if count > 0 {
+			db.Model(&model.Event{}).
+				Where("title = ?", seed.Title).
+				Updates(map[string]interface{}{
+					"latitude":  latitude,
+					"longitude": longitude,
+				})
 			continue
 		}
 
@@ -83,6 +91,8 @@ func seedEvents(db *gorm.DB) {
 			Venue:                &venue,
 			Address:              &address,
 			GoogleMapsURL:        &mapsURL,
+			Latitude:             &latitude,
+			Longitude:            &longitude,
 			StartDate:            &seed.StartDate,
 			EndDate:              &seed.EndDate,
 			RegistrationDeadline: &registrationDeadline,

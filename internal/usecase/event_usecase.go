@@ -20,7 +20,7 @@ type EventUsecase interface {
 	GetBySlug(slug string) (*dto.EventDetailResponse, error)
 	GetByPromoterID(promoterID uuid.UUID, search, categoryID, sortBy, sortOrder string, page, limit int) ([]dto.EventPromoterListResponse, int64, error)
 	CreateEvent(req dto.CreateEventRequest, promoterID uuid.UUID) (*dto.EventCreatedWithPayment, error)
-	ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error)
+	ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, latitudeStr, longitudeStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error)
 	HandleEventPaymentWebhook(req *dto.MidtransWebhookRequest) error
 }
 
@@ -100,7 +100,7 @@ func (u *eventUsecase) GetBySlug(slug string) (*dto.EventDetailResponse, error) 
 	return &response, nil
 }
 
-func (u *eventUsecase) ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error) {
+func (u *eventUsecase) ParseCreateEventRequest(categoryIDStr, title, summaryStr, descriptionStr, venueStr, addressStr, googleMapsURLStr, latitudeStr, longitudeStr, startDateStr, endDateStr, registrationDeadlineStr, quotaStr, priceStr, isPaidStr string) (*dto.CreateEventRequest, error) {
 	req := &dto.CreateEventRequest{}
 
 	// Parse category ID
@@ -155,6 +155,20 @@ func (u *eventUsecase) ParseCreateEventRequest(categoryIDStr, title, summaryStr,
 	}
 	if googleMapsURLStr != "" {
 		req.GoogleMapsURL = &googleMapsURLStr
+	}
+	if latitudeStr != "" {
+		latitude, err := strconv.ParseFloat(latitudeStr, 64)
+		if err != nil {
+			return nil, errors.New("invalid latitude format")
+		}
+		req.Latitude = &latitude
+	}
+	if longitudeStr != "" {
+		longitude, err := strconv.ParseFloat(longitudeStr, 64)
+		if err != nil {
+			return nil, errors.New("invalid longitude format")
+		}
+		req.Longitude = &longitude
 	}
 
 	// Parse dates
@@ -234,6 +248,8 @@ func (u *eventUsecase) CreateEvent(req dto.CreateEventRequest, promoterID uuid.U
 		Venue:                req.Venue,
 		Address:              req.Address,
 		GoogleMapsURL:        req.GoogleMapsURL,
+		Latitude:             req.Latitude,
+		Longitude:            req.Longitude,
 		StartDate:            req.StartDate,
 		EndDate:              req.EndDate,
 		RegistrationDeadline: req.RegistrationDeadline,
