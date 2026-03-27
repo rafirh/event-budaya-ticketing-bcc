@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"html"
 	"strings"
 
 	"event-budaya-ticketing-bcc/internal/dto"
@@ -61,16 +62,105 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) VerifyEmail(c *fiber.Ctx) error {
+	const loginURL = "https://kalcer-alpha.vercel.app/sign-in"
+
 	token := c.Query("token")
 	if token == "" {
-		return response.Error(c, fiber.StatusBadRequest, "verification token is required")
+		return c.Status(fiber.StatusBadRequest).Type("html").SendString(verificationResultHTML("Verifikasi Gagal", "Token verifikasi tidak ditemukan.", false, loginURL))
 	}
 
 	if err := h.authUsecase.VerifyEmail(token); err != nil {
-		return response.Error(c, fiber.StatusBadRequest, err.Error())
+		return c.Status(fiber.StatusBadRequest).Type("html").SendString(verificationResultHTML("Verifikasi Gagal", err.Error(), false, loginURL))
 	}
 
-	return response.Success(c, fiber.StatusOK, "Email verified successfully. You can now login.", nil)
+	return c.Status(fiber.StatusOK).Type("html").SendString(verificationResultHTML("Verifikasi Berhasil", "Akun Anda berhasil diverifikasi.", true, loginURL))
+}
+
+func verificationResultHTML(title, message string, success bool, loginURL string) string {
+	statusClass := "status-fail"
+	if success {
+		statusClass = "status-ok"
+	}
+
+	return fmt.Sprintf(`<!doctype html>
+<html lang="id">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>%s</title>
+	<style>
+		:root {
+			--bg: #f4f7fb;
+			--card: #ffffff;
+			--text: #17212f;
+			--muted: #5a6678;
+			--ok: #16803a;
+			--fail: #b42318;
+			--btn: #9f7f47;
+			--btn-hover: #8b6f3e;
+		}
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			background: radial-gradient(circle at top, #eaf2ff 0%%, var(--bg) 45%%);
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			color: var(--text);
+			padding: 20px;
+		}
+		.card {
+			width: 100%%;
+			max-width: 520px;
+			background: var(--card);
+			border-radius: 16px;
+			padding: 28px;
+			box-shadow: 0 10px 30px rgba(16, 24, 40, 0.08);
+			border: 1px solid #e5e7eb;
+			text-align: center;
+		}
+		h1 {
+			margin: 0 0 10px;
+			font-size: 28px;
+			line-height: 1.2;
+		}
+		p {
+			margin: 0;
+			color: var(--muted);
+			line-height: 1.6;
+			font-size: 15px;
+		}
+		.status-ok { color: var(--ok); }
+		.status-fail { color: var(--fail); }
+		.btn {
+			margin-top: 24px;
+			display: inline-block;
+			background: var(--btn);
+			color: #fff;
+			text-decoration: none;
+			font-weight: 600;
+			padding: 12px 20px;
+			border-radius: 10px;
+			transition: background 120ms ease-in-out;
+		}
+		.btn:hover { background: var(--btn-hover); }
+	</style>
+</head>
+<body>
+	<main class="card">
+		<h1 class="%s">%s</h1>
+		<p>%s</p>
+		<a class="btn" href="%s">Ke Halaman Login</a>
+	</main>
+</body>
+</html>`,
+		html.EscapeString(title),
+		statusClass,
+		html.EscapeString(title),
+		html.EscapeString(message),
+		html.EscapeString(loginURL),
+	)
 }
 
 func (h *AuthHandler) ResendVerificationEmail(c *fiber.Ctx) error {
