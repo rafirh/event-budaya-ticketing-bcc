@@ -17,6 +17,8 @@ type Event struct {
 	Venue                *string               `gorm:"size:200" json:"venue"`
 	Address              *string               `json:"address"`
 	GoogleMapsURL        *string               `json:"google_maps_url"`
+	Latitude             *float64              `gorm:"type:numeric(10,7)" json:"latitude"`
+	Longitude            *float64              `gorm:"type:numeric(10,7)" json:"longitude"`
 	StartDate            *time.Time            `json:"start_date"`
 	EndDate              *time.Time            `json:"end_date"`
 	RegistrationDeadline *time.Time            `json:"registration_deadline"`

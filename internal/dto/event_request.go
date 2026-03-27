@@ -14,6 +14,8 @@ type CreateEventRequest struct {
 	Venue                *string    `json:"venue" validate:"max=200"`
 	Address              *string    `json:"address"`
 	GoogleMapsURL        *string    `json:"google_maps_url"`
+	Latitude             *float64   `json:"latitude"`
+	Longitude            *float64   `json:"longitude"`
 	StartDate            *time.Time `json:"start_date"`
 	EndDate              *time.Time `json:"end_date"`
 	RegistrationDeadline *time.Time `json:"registration_deadline"`

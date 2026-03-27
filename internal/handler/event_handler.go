@@ -209,6 +209,8 @@ func (h *EventHandler) CreateEvent(c *fiber.Ctx) error {
 		c.FormValue("venue"),
 		c.FormValue("address"),
 		c.FormValue("google_maps_url"),
+		c.FormValue("latitude"),
+		c.FormValue("longitude"),
 		c.FormValue("start_date"),
 		c.FormValue("end_date"),
 		c.FormValue("registration_deadline"),

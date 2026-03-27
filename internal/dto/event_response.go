@@ -45,6 +45,8 @@ type EventDetailResponse struct {
 	Venue                *string               `json:"venue"`
 	Address              *string               `json:"address"`
 	GoogleMapsURL        *string               `json:"google_maps_url"`
+	Latitude             *float64              `json:"latitude"`
+	Longitude            *float64              `json:"longitude"`
 	StartDate            *time.Time            `json:"start_date"`
 	EndDate              *time.Time            `json:"end_date"`
 	RegistrationDeadline *time.Time            `json:"registration_deadline"`
@@ -104,6 +106,8 @@ func ToEventDetailResponse(event model.Event) EventDetailResponse {
 		Venue:                event.Venue,
 		Address:              event.Address,
 		GoogleMapsURL:        event.GoogleMapsURL,
+		Latitude:             event.Latitude,
+		Longitude:            event.Longitude,
 		StartDate:            event.StartDate,
 		EndDate:              event.EndDate,
 		RegistrationDeadline: event.RegistrationDeadline,
