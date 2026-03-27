@@ -37,15 +37,27 @@ func (u *ticketUsecase) GetMyTickets(userID string) ([]dto.MyTicketListResponse,
 
 	result := make([]dto.MyTicketListResponse, 0, len(tickets))
 	for _, ticket := range tickets {
-		result = append(result, dto.MyTicketListResponse{
+		item := dto.MyTicketListResponse{
 			ID:         ticket.ID,
 			TicketCode: ticket.TicketCode,
+			QRCode:     ticket.QRCode,
 			HolderName: ticket.HolderName,
-			EventName:  ticket.Order.Event.Title,
 			OrderID:    ticket.OrderID,
 			IsUsed:     ticket.IsUsed,
 			CreatedAt:  ticket.CreatedAt,
-		})
+		}
+
+		item.Event.ID = ticket.Order.Event.ID
+		item.Event.Title = ticket.Order.Event.Title
+		item.Event.Slug = ticket.Order.Event.Slug
+		item.Event.Venue = ticket.Order.Event.Venue
+		item.Event.Address = ticket.Order.Event.Address
+		item.Event.Time = ticket.Order.Event.Time
+		item.Event.StartDate = ticket.Order.Event.StartDate
+		item.Event.EndDate = ticket.Order.Event.EndDate
+		item.Event.BannerURL = ticket.Order.Event.BannerURL
+
+		result = append(result, item)
 	}
 
 	return result, nil
