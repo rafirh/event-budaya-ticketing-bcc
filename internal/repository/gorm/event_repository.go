@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"fmt"
+	"time"
 
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
@@ -19,7 +20,8 @@ func NewEventRepository(db *gorm.DB) repository.EventRepository {
 }
 
 func (r *eventRepository) FindAll(search, categoryID, sortBy, sortOrder string, limit, offset int) ([]model.Event, int64, error) {
-	baseQuery := r.db.Model(&model.Event{}).Where("status = ?", "published")
+	now := time.Now()
+	baseQuery := r.db.Model(&model.Event{}).Where("status = ? AND (published_date IS NULL OR published_date <= ?)", "published", now)
 	orderBy := buildEventOrderBy(sortBy, sortOrder)
 
 	if search != "" {
@@ -41,7 +43,7 @@ func (r *eventRepository) FindAll(search, categoryID, sortBy, sortOrder string, 
 		Preload("Promoter").
 		Preload("Category").
 		Scopes(func(db *gorm.DB) *gorm.DB {
-			query := db.Where("status = ?", "published")
+			query := db.Where("status = ? AND (published_date IS NULL OR published_date <= ?)", "published", now)
 			if search != "" {
 				searchKeyword := "%" + search + "%"
 				query = query.Where("title ILIKE ? OR summary ILIKE ? OR description ILIKE ?", searchKeyword, searchKeyword, searchKeyword)

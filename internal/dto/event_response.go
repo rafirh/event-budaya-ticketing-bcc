@@ -28,6 +28,8 @@ type EventListResponse struct {
 	EndDate              *time.Time            `json:"end_date"`
 	RegistrationDeadline *time.Time            `json:"registration_deadline"`
 	Venue                *string               `json:"venue"`
+	Time                 *string               `json:"time"`
+	PublishedDate        *time.Time            `json:"published_date"`
 	Title                string                `json:"title"`
 	Price                float64               `json:"price"`
 	Quota                int                   `json:"quota"`
@@ -45,6 +47,8 @@ type EventDetailResponse struct {
 	Venue                *string               `json:"venue"`
 	Address              *string               `json:"address"`
 	GoogleMapsURL        *string               `json:"google_maps_url"`
+	Time                 *string               `json:"time"`
+	PublishedDate        *time.Time            `json:"published_date"`
 	Latitude             *float64              `json:"latitude"`
 	Longitude            *float64              `json:"longitude"`
 	StartDate            *time.Time            `json:"start_date"`
@@ -77,6 +81,8 @@ func ToEventListResponse(event model.Event) EventListResponse {
 		EndDate:              event.EndDate,
 		RegistrationDeadline: event.RegistrationDeadline,
 		Venue:                event.Venue,
+		Time:                 event.Time,
+		PublishedDate:        event.PublishedDate,
 		Price:                event.Price,
 		Quota:                event.Quota,
 		Sold:                 event.Sold,
@@ -106,6 +112,8 @@ func ToEventDetailResponse(event model.Event) EventDetailResponse {
 		Venue:                event.Venue,
 		Address:              event.Address,
 		GoogleMapsURL:        event.GoogleMapsURL,
+		Time:                 event.Time,
+		PublishedDate:        event.PublishedDate,
 		Latitude:             event.Latitude,
 		Longitude:            event.Longitude,
 		StartDate:            event.StartDate,
@@ -139,6 +147,8 @@ type EventPromoterListResponse struct {
 	EndDate              *time.Time            `json:"end_date"`
 	RegistrationDeadline *time.Time            `json:"registration_deadline"`
 	Venue                *string               `json:"venue"`
+	Time                 *string               `json:"time"`
+	PublishedDate        *time.Time            `json:"published_date"`
 	IsPaid               bool                  `json:"is_paid"`
 	Price                float64               `json:"price"`
 	Quota                int                   `json:"quota"`
@@ -180,6 +190,8 @@ func ToEventPromoterListResponse(event model.Event, payment *model.EventCreation
 		EndDate:              event.EndDate,
 		RegistrationDeadline: event.RegistrationDeadline,
 		Venue:                event.Venue,
+		Time:                 event.Time,
+		PublishedDate:        event.PublishedDate,
 		IsPaid:               event.IsPaid,
 		Price:                event.Price,
 		Quota:                event.Quota,

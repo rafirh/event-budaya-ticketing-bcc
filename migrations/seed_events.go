@@ -28,6 +28,8 @@ func seedEvents(db *gorm.DB) {
 	}
 
 	desc := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+	eventTime := "10.00 - 12.00 WIB"
+	publishedDate := time.Date(2026, time.March, 1, 0, 0, 0, 0, time.UTC)
 	latitude := -7.953077
 	longitude := 112.614193
 
@@ -66,8 +68,10 @@ func seedEvents(db *gorm.DB) {
 			db.Model(&model.Event{}).
 				Where("title = ?", seed.Title).
 				Updates(map[string]interface{}{
-					"latitude":  latitude,
-					"longitude": longitude,
+					"time":           eventTime,
+					"published_date": publishedDate,
+					"latitude":       latitude,
+					"longitude":      longitude,
 				})
 			continue
 		}
@@ -91,6 +95,8 @@ func seedEvents(db *gorm.DB) {
 			Venue:                &venue,
 			Address:              &address,
 			GoogleMapsURL:        &mapsURL,
+			Time:                 &eventTime,
+			PublishedDate:        &publishedDate,
 			Latitude:             &latitude,
 			Longitude:            &longitude,
 			StartDate:            &seed.StartDate,
