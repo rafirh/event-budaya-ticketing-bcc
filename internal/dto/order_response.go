@@ -70,11 +70,22 @@ type MyOrderDetailResponse struct {
 type MyTicketListResponse struct {
 	ID         uuid.UUID `json:"id"`
 	TicketCode string    `json:"ticket_code"`
+	QRCode     *string   `json:"qrcode"`
 	HolderName string    `json:"holder_name"`
-	EventName  string    `json:"event_name"`
-	OrderID    uuid.UUID `json:"order_id"`
-	IsUsed     bool      `json:"is_used"`
-	CreatedAt  time.Time `json:"created_at"`
+	Event      struct {
+		ID        uuid.UUID  `json:"id"`
+		Title     string     `json:"title"`
+		Slug      *string    `json:"slug"`
+		Venue     *string    `json:"venue"`
+		Address   *string    `json:"address"`
+		Time      *string    `json:"time"`
+		StartDate *time.Time `json:"start_date"`
+		EndDate   *time.Time `json:"end_date"`
+		BannerURL *string    `json:"banner_url"`
+	} `json:"event"`
+	OrderID   uuid.UUID `json:"order_id"`
+	IsUsed    bool      `json:"is_used"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type MyTicketDetailResponse struct {
