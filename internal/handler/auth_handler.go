@@ -223,6 +223,24 @@ func (h *AuthHandler) UpdateProfile(c *fiber.Ctx) error {
 	return response.Success(c, fiber.StatusOK, "Profile updated successfully", user)
 }
 
+func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
+	var req dto.ChangePasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "Invalid request body")
+	}
+
+	if errors := validator.ValidateStruct(req); errors != nil {
+		return response.ValidationError(c, errors)
+	}
+
+	userID := c.Locals("userID").(string)
+	if err := h.authUsecase.ChangePassword(userID, &req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	return response.Success(c, fiber.StatusOK, "Password changed successfully", nil)
+}
+
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	parts := strings.Split(authHeader, " ")

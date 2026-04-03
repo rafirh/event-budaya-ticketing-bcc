@@ -30,6 +30,7 @@ type AuthUsecase interface {
 	ResendVerificationEmail(email string) error
 	GetMe(id string) (*dto.UserResponse, error)
 	UpdateProfile(userID string, req *dto.UpdateProfileRequest, photo *multipart.FileHeader) (*dto.UserResponse, error)
+	ChangePassword(userID string, req *dto.ChangePasswordRequest) error
 	Logout(token string) error
 	GoogleLoginURL(state string) string
 	GoogleCallback(ctx context.Context, code, state string) (*dto.LoginResponse, error)
@@ -343,6 +344,33 @@ func (u *authUsecase) UpdateProfile(userID string, req *dto.UpdateProfileRequest
 
 	resp := dto.ToUserResponse(user)
 	return &resp, nil
+}
+
+func (u *authUsecase) ChangePassword(userID string, req *dto.ChangePasswordRequest) error {
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.CurrentPassword)); err != nil {
+		return errors.New("current password is incorrect")
+	}
+
+	if req.CurrentPassword == req.NewPassword {
+		return errors.New("new password must be different from current password")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	user.Password = string(hashedPassword)
+	if err := u.userRepo.Update(user); err != nil {
+		return errors.New("failed to update password")
+	}
+
+	return nil
 }
 
 func (u *authUsecase) Logout(token string) error {
