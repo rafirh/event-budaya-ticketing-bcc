@@ -66,6 +66,34 @@ func (h *TicketHandler) GetMyTicketDetail(c *fiber.Ctx) error {
 	return response.Success(c, fiber.StatusOK, "Ticket detail retrieved successfully", ticketDetail)
 }
 
+func (h *TicketHandler) DownloadMyTicketPDF(c *fiber.Ctx) error {
+	userID, ok := c.Locals("userID").(string)
+	if !ok || userID == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	ticketID := c.Params("id")
+	if ticketID == "" {
+		return response.Error(c, fiber.StatusBadRequest, "Ticket ID is required")
+	}
+
+	pdfBytes, filename, err := h.ticketUsecase.DownloadMyTicketPDF(userID, ticketID)
+	if err != nil {
+		switch err.Error() {
+		case "ticket not found":
+			return response.Error(c, fiber.StatusNotFound, err.Error())
+		case "unauthorized":
+			return response.Error(c, fiber.StatusForbidden, err.Error())
+		default:
+			return response.Error(c, fiber.StatusBadRequest, err.Error())
+		}
+	}
+
+	c.Set(fiber.HeaderContentType, "application/pdf")
+	c.Set(fiber.HeaderContentDisposition, "attachment; filename=\""+filename+"\"")
+	return c.Status(fiber.StatusOK).Send(pdfBytes)
+}
+
 func (h *TicketHandler) GetAttendeesByEventID(c *fiber.Ctx) error {
 	userID := c.Locals("userID")
 	if userID == nil {
