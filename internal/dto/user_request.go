@@ -24,6 +24,12 @@ type UpdateProfileRequest struct {
 	Gender *string `json:"gender" validate:"omitempty,oneof=male female other"`
 }
 
+type ChangePasswordRequest struct {
+	CurrentPassword    string `json:"current_password" validate:"required"`
+	NewPassword        string `json:"new_password" validate:"required,min=6"`
+	ConfirmNewPassword string `json:"confirm_new_password" validate:"required,eqfield=NewPassword"`
+}
+
 type GoogleLoginCallbackRequest struct {
 	Code  string `query:"code" validate:"required"`
 	State string `query:"state" validate:"required"`

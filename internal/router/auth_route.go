@@ -23,4 +23,5 @@ func authRoutes(api fiber.Router, authHandler *handler.AuthHandler, tokenRepo re
 	me := api.Group("/me", middleware.AuthMiddleware(tokenRepo))
 	me.Get("", authHandler.Me)
 	me.Patch("", authHandler.UpdateProfile)
+	me.Patch("/password", authHandler.ChangePassword)
 }
