@@ -3,6 +3,7 @@ package gorm
 import (
 	"event-budaya-ticketing-bcc/internal/model"
 	"event-budaya-ticketing-bcc/internal/repository"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -52,6 +53,26 @@ func (r *ticketRepository) FindByUserID(userID string) ([]model.Ticket, error) {
 		return nil, err
 	}
 	return tickets, nil
+}
+
+func (r *ticketRepository) FindDistinctEventsByUserIDAndDateRange(userID string, start, end time.Time) ([]model.Event, error) {
+	var events []model.Event
+	err := r.db.Model(&model.Event{}).
+		Distinct("events.*").
+		Joins("JOIN orders ON orders.event_id = events.id").
+		Joins("JOIN tickets ON tickets.order_id = orders.id").
+		Where("orders.user_id = ?", userID).
+		Where("orders.status = ?", "paid").
+		Where("events.start_date IS NOT NULL").
+		Where("events.start_date >= ?", start).
+		Where("events.start_date < ?", end).
+		Order("events.start_date ASC").
+		Find(&events).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }
 
 func (r *ticketRepository) FindByEventID(eventID string, search string, limit, offset int) ([]model.Ticket, int64, error) {

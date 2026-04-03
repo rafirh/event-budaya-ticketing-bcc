@@ -12,6 +12,7 @@ type UserRepository interface {
 	Create(user *model.User) error
 	FindByID(id string) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
+	FindAll() ([]model.User, error)
 	Update(user *model.User) error
 	DeleteByID(id string) error
 }
@@ -65,6 +66,7 @@ type TicketRepository interface {
 	FindByOrderID(orderID string) ([]model.Ticket, error)
 	FindByID(id string) (*model.Ticket, error)
 	FindByUserID(userID string) ([]model.Ticket, error)
+	FindDistinctEventsByUserIDAndDateRange(userID string, start, end time.Time) ([]model.Event, error)
 	FindByEventID(eventID string, search string, limit, offset int) ([]model.Ticket, int64, error)
 	FindByIDAndEventID(ticketID, eventID string) (*model.Ticket, error)
 	FindByCodeAndEventID(ticketCode, eventID string) (*model.Ticket, error)
