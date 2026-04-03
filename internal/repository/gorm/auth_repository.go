@@ -37,6 +37,15 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
+func (r *userRepository) FindAll() ([]model.User, error) {
+	var users []model.User
+	err := r.db.Order("created_at ASC").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (r *userRepository) Update(user *model.User) error {
 	return r.db.Save(user).Error
 }

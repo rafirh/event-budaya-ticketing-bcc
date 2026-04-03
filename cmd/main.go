@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"os"
@@ -109,6 +110,9 @@ func main() {
 	orderHandler := handler.NewOrderHandler(orderUsecase)
 	ticketHandler := handler.NewTicketHandler(ticketUsecase, eventRepo)
 	walletHandler := handler.NewWalletHandler(walletUsecase)
+	eventReminderScheduler := usecase.NewEventReminderScheduler(userRepo, ticketRepo, mailSender, config.AppConfig.Timezone)
+	schedulerCtx, schedulerCancel := context.WithCancel(context.Background())
+	go eventReminderScheduler.Start(schedulerCtx)
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.AppConfig.AppName,
@@ -123,6 +127,7 @@ func main() {
 	go func() {
 		<-c
 		log.Println("Gracefully shutting down...")
+		schedulerCancel()
 		_ = app.Shutdown()
 	}()
 
